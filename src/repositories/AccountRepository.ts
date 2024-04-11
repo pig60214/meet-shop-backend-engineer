@@ -4,8 +4,7 @@ import ApiResponseError from '../models/ApiResponseError';
 import IAccount from '../models/IAccount';
 import IApiResponse from '../models/IApiResponse';
 import EnumResponseStatus from '../models/enums/EnumResponseStatus';
-
-const accounts: IAccount[] = [];
+import accounts from '../data/accounts';
 
 export default class AccountRepository {
   async create(account: IAccount): Promise<IApiResponse> {
