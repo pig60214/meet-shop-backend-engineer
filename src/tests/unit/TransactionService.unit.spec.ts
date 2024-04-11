@@ -5,6 +5,17 @@ import ITransactionResult from '../../models/ITransactionResult';
 import IApiResponse from '../../models/IApiResponse';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
 
+const responseFromRepo: IApiResponse<ITransactionResult> = {
+  status: {
+    code: EnumResponseStatus.Success,
+    message: EnumResponseStatus[EnumResponseStatus.Success],
+  },
+  data: {
+    beforeBalance: 0,
+    afterBalance: 200,
+  },
+};
+
 describe('TransactionService', () => {
   let transactionRepository: TransactionRepository;
   let transactionService: TransactionService;
@@ -14,17 +25,25 @@ describe('TransactionService', () => {
     transactionService = new TransactionService(transactionRepository);
   });
 
-  it('Deposit: call TransactionRepository.deposit() and return the result from it', async () => {
-    const responseFromRepo: IApiResponse<ITransactionResult> = {
+  it('GetBalance: call TransactionRepository.getBalance() and return the result from it', async () => {
+    const responseFromRepoGetBalance = {
       status: {
         code: EnumResponseStatus.Success,
         message: EnumResponseStatus[EnumResponseStatus.Success],
       },
-      data: {
-        beforeBalance: 0,
-        afterBalance: 200,
-      },
+      data: 0,
     };
+    const mockRepoGetBalance = jest.spyOn(transactionRepository, 'getBalance').mockResolvedValue(responseFromRepoGetBalance);
+
+    const name = 'test';
+    const response = await transactionService.getBalance(name);
+
+    expect(mockRepoGetBalance).toHaveBeenCalledTimes(1);
+    expect(mockRepoGetBalance).toHaveBeenCalledWith(name);
+    expect(response).toEqual(responseFromRepoGetBalance);
+  });
+
+  it('Deposit: call TransactionRepository.deposit() and return the result from it', async () => {
     const mockRepoDeposit = jest.spyOn(transactionRepository, 'deposit').mockResolvedValue(responseFromRepo);
 
     const transaction: ITransactionRequest = {
@@ -39,16 +58,6 @@ describe('TransactionService', () => {
   });
 
   it('Withdraw: call TransactionRepository.withdraw() and return the result from it', async () => {
-    const responseFromRepo: IApiResponse<ITransactionResult> = {
-      status: {
-        code: EnumResponseStatus.Success,
-        message: EnumResponseStatus[EnumResponseStatus.Success],
-      },
-      data: {
-        beforeBalance: 200,
-        afterBalance: 0,
-      },
-    };
     const mockRepoWithdraw = jest.spyOn(transactionRepository, 'withdraw').mockResolvedValue(responseFromRepo);
 
     const transaction: ITransactionRequest = {

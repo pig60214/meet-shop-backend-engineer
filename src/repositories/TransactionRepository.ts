@@ -11,6 +11,14 @@ import EnumResponseStatus from '../models/enums/EnumResponseStatus';
 export default class TransactionRepository {
   private static mutex = new Lock();
 
+  async getBalance(name: string): Promise<IApiResponse<number>> {
+    const account = accounts.find(a => a.name === name);
+    if (account) {
+      return new ApiResponse(account.balance);
+    }
+    return new ApiResponseError(EnumResponseStatus.AccountNotExists);
+  }
+
   async deposit(transaction: ITransactionRequest): Promise<IApiResponse<ITransactionResult>> {
     const account = accounts.find(a => a.name === transaction.receiver);
 

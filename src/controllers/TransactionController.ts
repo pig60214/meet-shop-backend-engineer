@@ -1,7 +1,7 @@
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable class-methods-use-this */
 import {
-  Body, Controller, Route, Tags, Post,
+  Body, Controller, Route, Tags, Post, Path, Get,
 } from 'tsoa';
 import TransactionService from '../services/TransactionService';
 import ITransactionRequest from '../models/ITransactionRequest';
@@ -12,6 +12,16 @@ import IApiResponse from '../models/IApiResponse';
 @Tags('Transaction')
 export class TransactionControlle extends Controller {
   private transactionService = new TransactionService();
+
+  /**
+   * Potential response status: AccountNotExists
+   * @summary Get the balance of an account
+   */
+  @Get('/balance/{name}')
+  public async getBalance(@Path() name: string): Promise<IApiResponse<number>> {
+    const response = await this.transactionService.getBalance(name);
+    return response;
+  }
 
   /**
    * Potential response status: ValidationFailed, AccountNotExists

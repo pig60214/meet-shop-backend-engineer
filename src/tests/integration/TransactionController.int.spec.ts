@@ -21,6 +21,30 @@ const transactionZeroAmount: ITransactionRequest = {
 
 let app: typeof appDefault.default;
 
+describe('TransactionController.GetBalance', () => {
+  beforeEach(() => {
+    jest.isolateModules(async () => import('../../app').then(module => { app = module.default; }));
+  });
+
+  afterEach(() => {
+    jest.resetModules();
+  });
+
+  it('GetBalance', async () => {
+    await request(app).post('/account/create').send(account);
+
+    const response = await request(app).get('/transaction/balance/test');
+
+    expect(response.body.status.code).toBe(EnumResponseStatus.Success);
+    expect(response.body.data).toBe(100);
+  });
+
+  it('Account not existed', async () => {
+    const response = await request(app).get('/transaction/balance/test');
+    expect(response.body.status.code).toBe(EnumResponseStatus.AccountNotExists);
+  });
+});
+
 describe('TransactionController.Deposit', () => {
   beforeEach(() => {
     jest.isolateModules(async () => import('../../app').then(module => { app = module.default; }));

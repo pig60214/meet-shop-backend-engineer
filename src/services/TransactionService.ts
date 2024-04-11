@@ -11,6 +11,11 @@ export default class TransactionService {
     this.transactionRepository = transactionRepository ?? new TransactionRepository();
   }
 
+  async getBalance(name: string): Promise<IApiResponse<number>> {
+    const response = await this.transactionRepository.getBalance(name);
+    return response;
+  }
+
   async deposit(transaction: ITransactionRequest): Promise<IApiResponse<ITransactionResult>> {
     const response = await this.transactionRepository.deposit(transaction);
     return response;
