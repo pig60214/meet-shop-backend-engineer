@@ -15,4 +15,9 @@ export default class TransactionService {
     const response = await this.transactionRepository.deposit(transaction);
     return response;
   }
+
+  async withdraw(transaction: ITransactionRequest): Promise<IApiResponse<ITransactionResult>> {
+    const response = await this.transactionRepository.withdraw(transaction);
+    return response;
+  }
 }

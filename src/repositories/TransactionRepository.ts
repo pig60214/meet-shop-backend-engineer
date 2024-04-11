@@ -20,4 +20,20 @@ export default class TransactionRepository {
 
     return new ApiResponseError(EnumResponseStatus.AccountNotExists);
   }
+
+  async withdraw(transaction: ITransactionRequest): Promise<IApiResponse<ITransactionResult>> {
+    const account = accounts.find(a => a.name === transaction.receiver);
+
+    if (account) {
+      if (account.balance < transaction.amount) {
+        return new ApiResponseError(EnumResponseStatus.BalanceNotEnough);
+      }
+      const beforeBalance = account.balance;
+      account.balance -= transaction.amount;
+      const result = { beforeBalance, afterBalance: account.balance };
+      return new ApiResponse(result);
+    }
+
+    return new ApiResponseError(EnumResponseStatus.AccountNotExists);
+  }
 }

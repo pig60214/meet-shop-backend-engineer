@@ -22,4 +22,14 @@ export class TransactionControlle extends Controller {
     const response = await this.transactionService.deposit(transaction);
     return response;
   }
+
+  /**
+   * Potential response status: ValidationFailed, AccountNotExists, BalanceNotEnough
+   * @summary Withdraw from an account
+   */
+  @Post('/withdraw')
+  public async withdraw(@Body() transaction: ITransactionRequest): Promise<IApiResponse<ITransactionResult>> {
+    const response = await this.transactionService.withdraw(transaction);
+    return response;
+  }
 }

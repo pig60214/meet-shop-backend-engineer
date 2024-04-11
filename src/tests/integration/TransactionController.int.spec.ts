@@ -53,3 +53,47 @@ describe('TransactionController.Deposit', () => {
     expect(response.body.status.code).toBe(EnumResponseStatus.AccountNotExists);
   });
 });
+
+describe('TransactionController.Withdraw', () => {
+  beforeEach(() => {
+    jest.isolateModules(async () => import('../../app').then(module => { app = module.default; }));
+  });
+
+  afterEach(() => {
+    jest.resetModules();
+  });
+
+  it('Withdraw', async () => {
+    await request(app).post('/account/create').send(account);
+
+    const response = await request(app).post('/transaction/withdraw').send(transaction);
+
+    expect(response.body.status.code).toBe(EnumResponseStatus.Success);
+    expect(response.body.data.afterBalance).toBe(0);
+  });
+
+  it('Transaction minimum is 1. Withdrawing zero should get ValidationFailed', async () => {
+    await request(app).post('/account/create').send(account);
+
+    const response = await request(app).post('/transaction/withdraw').send(transactionZeroAmount);
+
+    expect(response.body.status.code).toBe(EnumResponseStatus.ValidationFailed);
+  });
+
+  it('Account not existed', async () => {
+    const response = await request(app).post('/transaction/withdraw').send(transaction);
+    expect(response.body.status.code).toBe(EnumResponseStatus.AccountNotExists);
+  });
+
+  it('Withdrawing over the balance should get BalanceNotEnough', async () => {
+    await request(app).post('/account/create').send(account);
+
+    const withdrawOverBalance: ITransactionRequest = {
+      receiver: 'test',
+      amount: 200,
+    };
+    const response = await request(app).post('/transaction/withdraw').send(withdrawOverBalance);
+
+    expect(response.body.status.code).toBe(EnumResponseStatus.BalanceNotEnough);
+  });
+});
