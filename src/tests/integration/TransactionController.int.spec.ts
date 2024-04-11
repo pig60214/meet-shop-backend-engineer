@@ -1,4 +1,4 @@
-import request from 'supertest';
+import request, { Response } from 'supertest';
 import IAccount from '../../models/IAccount';
 import * as appDefault from '../../app';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
@@ -95,5 +95,44 @@ describe('TransactionController.Withdraw', () => {
     const response = await request(app).post('/transaction/withdraw').send(withdrawOverBalance);
 
     expect(response.body.status.code).toBe(EnumResponseStatus.BalanceNotEnough);
+  });
+});
+
+describe('Other', () => {
+  beforeEach(() => {
+    jest.isolateModules(async () => import('../../app').then(module => { app = module.default; }));
+  });
+
+  afterEach(() => {
+    jest.resetModules();
+  });
+
+  it('Correct Order', async () => {
+    const r = await request(app).post('/account/create').send({ name: 'test', balance: 0 });
+
+    const promises = [];
+    const responses: (Response)[] = [r, r, r];
+
+    promises.push(
+      request(app).post('/transaction/deposit').send({ receiver: 'test', amount: 2 }).then(response => {
+        responses[0] = response;
+      }),
+    );
+    promises.push(
+      request(app).post('/transaction/withdraw').send({ receiver: 'test', amount: 4 }).then(response => {
+        responses[1] = response;
+      }),
+    );
+    promises.push(
+      request(app).post('/transaction/deposit').send({ receiver: 'test', amount: 2 }).then(response => {
+        responses[2] = response;
+      }),
+    );
+
+    await Promise.all(promises);
+
+    expect(responses[1].body.status.code).toBe(EnumResponseStatus.BalanceNotEnough);
+    expect(responses[2].body.status.code).toBe(EnumResponseStatus.Success);
+    expect(responses[2].body.data.afterBalance).toBe(4);
   });
 });
