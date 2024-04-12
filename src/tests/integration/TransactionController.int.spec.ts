@@ -4,6 +4,7 @@ import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
 import ITransactionRequest from '../../models/ITransactionRequest';
 import ITransferTransactionRequest from '../../controllers/ITransferTransactionRequest';
 import accounts from '../../data/accounts';
+import TransactionSp from '../../data/transactions';
 
 const agent = request(app);
 
@@ -102,6 +103,7 @@ describe('TransactionController.Withdraw', () => {
 describe('TransactionController.Transfer', () => {
   beforeEach(() => {
     accounts.length = 0;
+    TransactionSp.forTesting.clear();
   });
 
   it('Transfer', async () => {
@@ -163,5 +165,16 @@ describe('TransactionController.Transfer', () => {
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.BalanceNotEnough]);
     expect(giverBalanceResponse.body.data).toBe(100);
     expect(receiverBalanceResponse.body.data).toBe(200);
+  });
+
+  it('Save transaction log', async () => {
+    accounts.push({ name: 'giver', balance: 100 });
+    accounts.push({ name: 'receiver', balance: 200 });
+
+    const transfer: ITransferTransactionRequest = { giver: 'giver', receiver: 'receiver', amount: 40 };
+    await agent.post('/transaction/transfer').send(transfer);
+
+    const result = TransactionSp.forTesting.findTransaction(transfer);
+    expect(result).not.toBe(undefined);
   });
 });

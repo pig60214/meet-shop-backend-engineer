@@ -1,6 +1,7 @@
 /* eslint-disable class-methods-use-this */
 import ITransferTransactionRequest from '../controllers/ITransferTransactionRequest';
 import accounts from '../data/accounts';
+import TransactionSp from '../data/transactions';
 import ApiResponse from '../models/ApiResponse';
 import ApiResponseError from '../models/ApiResponseError';
 import IApiResponse from '../models/IApiResponse';
@@ -74,6 +75,7 @@ export default class TransactionRepository {
     receiver.balance += transaction.amount;
 
     const result = { beforeBalance, afterBalance: giver.balance };
+    TransactionSp.insert(transaction);
     TransactionRepository.mutex.release(giver.name);
     TransactionRepository.mutex.release(receiver.name);
     return new ApiResponse(result);
