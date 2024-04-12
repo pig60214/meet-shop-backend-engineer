@@ -125,13 +125,33 @@ describe('TransactionController.Transfer', () => {
     expect(receiverBalance.body.data).toBe(240);
   });
 
-  it('Transaction minimum is 1. Transfering zero should get ValidationFailed', async () => {
-    AccountSp.insert({ name: 'giver', balance: 100 });
-    AccountSp.insert({ name: 'receiver', balance: 200 });
-
+  it('ValidationFailed: amount < 1.', async () => {
     const transferZero: ITransferTransactionRequest = { giver: 'giver', receiver: 'receiver', amount: 0 };
 
     const response = await agent.post('/transaction/transfer').send(transferZero);
+
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
+  });
+
+  it('ValidationFailed: giver === receiver', async () => {
+    AccountSp.insert({ name: 'giver', balance: 100 });
+
+    const transaction: ITransferTransactionRequest = { giver: 'giver', receiver: 'giver', amount: 40 };
+    const response = await agent.post('/transaction/transfer').send(transaction);
+
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
+  });
+
+  it('ValidationFailed: giver = ""', async () => {
+    const transaction: ITransferTransactionRequest = { giver: '', receiver: 'receiver', amount: 40 };
+    const response = await agent.post('/transaction/transfer').send(transaction);
+
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
+  });
+
+  it('ValidationFailed: receiver = ""', async () => {
+    const transaction: ITransferTransactionRequest = { giver: 'giver', receiver: '', amount: 40 };
+    const response = await agent.post('/transaction/transfer').send(transaction);
 
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
   });

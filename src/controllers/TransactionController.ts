@@ -8,6 +8,8 @@ import ITransactionRequest from '../models/ITransactionRequest';
 import ITransactionResult from '../models/ITransactionResult';
 import IApiResponse from '../models/IApiResponse';
 import ITransferTransactionRequest from './ITransferTransactionRequest';
+import ApiResponseError from '../models/ApiResponseError';
+import EnumResponseStatus from '../models/enums/EnumResponseStatus';
 
 @Route('transaction')
 @Tags('Transaction')
@@ -50,6 +52,11 @@ export class TransactionControlle extends Controller {
    */
   @Post('/transfer')
   public async transfer(@Body() transaction: ITransferTransactionRequest): Promise<IApiResponse<ITransactionResult>> {
+    if (transaction.giver === transaction.receiver) {
+      const response = new ApiResponseError(EnumResponseStatus.ValidationFailed);
+      response.status.detail = 'giver and receiver should be different';
+      return response;
+    }
     const response = await this.transactionService.transfer(transaction);
     return response;
   }

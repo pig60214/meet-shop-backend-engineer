@@ -1,4 +1,7 @@
 export default interface IAccount {
+  /**
+   * @minLength 1
+   */
   name: string
 
   /**

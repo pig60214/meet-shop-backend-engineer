@@ -1,4 +1,7 @@
 export default interface ITransactionRequest {
+  /**
+   * @minLength 1
+   */
   receiver: string;
 
   /**

@@ -36,4 +36,9 @@ describe('AccountController', () => {
     const response = await agent.post('/account/create').send(accountWithNegativeBalance);
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
   });
+
+  it('ValidationFailed: name = ""', async () => {
+    const response = await agent.post('/account/create').send({ name: '', balance: 0 });
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
+  });
 });
