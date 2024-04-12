@@ -11,7 +11,7 @@ describe('Other', () => {
   });
 
   it('Correct Order', async () => {
-    await agent.post('/account/create').send({ name: 'test', balance: 0 });
+    accounts.push({ name: 'test', balance: 0 });
     const promises = [];
 
     let response1 = {} as Response;
