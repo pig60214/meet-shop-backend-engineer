@@ -5,6 +5,7 @@ import ITransactionResult from '../../models/ITransactionResult';
 import IApiResponse from '../../models/IApiResponse';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
 import ITransferTransactionRequest from '../../controllers/ITransferTransactionRequest';
+import LogService from '../../services/LogService';
 
 const responseFromRepo: IApiResponse<ITransactionResult> = {
   status: {
@@ -16,6 +17,8 @@ const responseFromRepo: IApiResponse<ITransactionResult> = {
     afterBalance: 200,
   },
 };
+
+console.info = jest.fn();
 
 describe('TransactionService', () => {
   let transactionRepository: TransactionRepository;
@@ -85,5 +88,24 @@ describe('TransactionService', () => {
     expect(mockRepoTransfer).toHaveBeenCalledTimes(1);
     expect(mockRepoTransfer).toHaveBeenCalledWith(transaction);
     expect(response).toEqual(responseFromRepo);
+  });
+
+  it('Transfer: log request and response', async () => {
+    const logService = new LogService();
+    transactionService = new TransactionService(transactionRepository, logService);
+
+    transactionRepository.transfer = jest.fn().mockResolvedValue(responseFromRepo);
+    const mockLog = jest.spyOn(logService, 'log').mockImplementation(jest.fn());
+
+    const request: ITransferTransactionRequest = {
+      giver: 'test1',
+      receiver: 'test',
+      amount: 100,
+    };
+    const response = await transactionService.transfer(request);
+
+    expect(mockLog).toHaveBeenCalledTimes(2);
+    expect(mockLog).toHaveBeenNthCalledWith(1, `TransactionService.transfer() Request: ${JSON.stringify(request)}`);
+    expect(mockLog).toHaveBeenNthCalledWith(2, `TransactionService.transfer() Response: ${JSON.stringify(response)}`);
   });
 });

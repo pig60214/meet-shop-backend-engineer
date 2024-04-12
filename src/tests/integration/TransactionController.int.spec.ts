@@ -7,6 +7,8 @@ import accounts from '../../data/accounts';
 
 const agent = request(app);
 
+console.info = jest.fn();
+
 describe('TransactionController.GetBalance', () => {
   beforeEach(() => {
     accounts.length = 0;

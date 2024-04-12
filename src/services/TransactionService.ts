@@ -4,12 +4,16 @@ import IApiResponse from '../models/IApiResponse';
 import ITransactionRequest from '../models/ITransactionRequest';
 import ITransactionResult from '../models/ITransactionResult';
 import TransactionRepository from '../repositories/TransactionRepository';
+import LogService from './LogService';
 
 export default class TransactionService {
   private transactionRepository: TransactionRepository;
 
-  constructor(transactionRepository?: TransactionRepository) {
+  private logService: LogService;
+
+  constructor(transactionRepository?: TransactionRepository, logService?: LogService) {
     this.transactionRepository = transactionRepository ?? new TransactionRepository();
+    this.logService = logService ?? new LogService();
   }
 
   async getBalance(name: string): Promise<IApiResponse<number>> {
@@ -28,7 +32,9 @@ export default class TransactionService {
   }
 
   async transfer(transaction: ITransferTransactionRequest): Promise<IApiResponse<ITransactionResult>> {
+    this.logService.log(`TransactionService.transfer() Request: ${JSON.stringify(transaction)}`);
     const response = await this.transactionRepository.transfer(transaction);
+    this.logService.log(`TransactionService.transfer() Response: ${JSON.stringify(response)}`);
     return response;
   }
 }
