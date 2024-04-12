@@ -3,6 +3,7 @@ import IAccount from '../../models/IAccount';
 import * as appDefault from '../../app';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
 import ITransactionRequest from '../../models/ITransactionRequest';
+import ITransferTransactionRequest from '../../controllers/ITransferTransactionRequest';
 
 const account: IAccount = {
   name: 'test',
@@ -41,7 +42,7 @@ describe('TransactionController.GetBalance', () => {
 
   it('Account not existed', async () => {
     const response = await request(app).get('/transaction/balance/test');
-    expect(response.body.status.code).toBe(EnumResponseStatus.AccountNotExists);
+    expect(response.body.status.code).toBe(EnumResponseStatus.AccountNotExist);
   });
 });
 
@@ -74,7 +75,7 @@ describe('TransactionController.Deposit', () => {
 
   it('Account not existed', async () => {
     const response = await request(app).post('/transaction/deposit').send(transaction);
-    expect(response.body.status.code).toBe(EnumResponseStatus.AccountNotExists);
+    expect(response.body.status.code).toBe(EnumResponseStatus.AccountNotExist);
   });
 });
 
@@ -106,7 +107,7 @@ describe('TransactionController.Withdraw', () => {
 
   it('Account not existed', async () => {
     const response = await request(app).post('/transaction/withdraw').send(transaction);
-    expect(response.body.status.code).toBe(EnumResponseStatus.AccountNotExists);
+    expect(response.body.status.code).toBe(EnumResponseStatus.AccountNotExist);
   });
 
   it('Withdrawing over the balance should get BalanceNotEnough', async () => {
@@ -119,6 +120,94 @@ describe('TransactionController.Withdraw', () => {
     const response = await request(app).post('/transaction/withdraw').send(withdrawOverBalance);
 
     expect(response.body.status.code).toBe(EnumResponseStatus.BalanceNotEnough);
+  });
+});
+
+describe('TransactionController.Transfer', () => {
+  beforeEach(() => {
+    jest.isolateModules(async () => import('../../app').then(module => { app = module.default; }));
+  });
+
+  afterEach(() => {
+    jest.resetModules();
+  });
+
+  const transferTransaction: ITransferTransactionRequest = {
+    giver: 'test',
+    receiver: 'receiver',
+    amount: 40,
+  };
+
+  const receiverAccount: IAccount = {
+    name: 'receiver',
+    balance: 200,
+  };
+
+  it('Transfer', async () => {
+    await request(app).post('/account/create').send(account);
+    await request(app).post('/account/create').send(receiverAccount);
+
+    const response = await request(app).post('/transaction/transfer').send(transferTransaction);
+    const receiverBalanceResponse = await request(app).get('/transaction/balance/receiver');
+
+    expect(response.body.status.code).toBe(EnumResponseStatus.Success);
+    expect(response.body.data.afterBalance).toBe(60);
+    expect(receiverBalanceResponse.body.data).toBe(240);
+  });
+
+  it('Transaction minimum is 1. Transfering zero should get ValidationFailed', async () => {
+    await request(app).post('/account/create').send(account);
+    await request(app).post('/account/create').send(receiverAccount);
+
+    const transferZero: ITransferTransactionRequest = {
+      giver: 'test',
+      receiver: 'receiver',
+      amount: 0,
+    };
+
+    const response = await request(app).post('/transaction/transfer').send(transferZero);
+
+    expect(response.body.status.code).toBe(EnumResponseStatus.ValidationFailed);
+  });
+
+  it('Giver not existed and the balance of receiver should be the same', async () => {
+    await request(app).post('/account/create').send(receiverAccount);
+
+    const response = await request(app).post('/transaction/transfer').send(transferTransaction);
+    const receiverBalanceResponse = await request(app).get('/transaction/balance/receiver');
+
+    expect(response.body.status.code).toBe(EnumResponseStatus.AccountNotExist);
+    expect(receiverBalanceResponse.body.data).toBe(200);
+  });
+
+  it('Receiver not existed and the balance of giver should be the same', async () => {
+    await request(app).post('/account/create').send(account);
+
+    const response = await request(app).post('/transaction/transfer').send(transferTransaction);
+
+    const giverBalanceResponse = await request(app).get('/transaction/balance/test');
+
+    expect(response.body.status.code).toBe(EnumResponseStatus.ReceiverNotExist);
+    expect(giverBalanceResponse.body.data).toBe(100);
+  });
+
+  it('Transfering over the balance of the giver should get BalanceNotEnough. Balances of giver and receiver are the same', async () => {
+    await request(app).post('/account/create').send(account);
+    await request(app).post('/account/create').send(receiverAccount);
+
+    const transferOverBalance: ITransferTransactionRequest = {
+      giver: 'test',
+      receiver: 'receiver',
+      amount: 150,
+    };
+
+    const response = await request(app).post('/transaction/transfer').send(transferOverBalance);
+    const giverBalanceResponse = await request(app).get('/transaction/balance/test');
+    const receiverBalanceResponse = await request(app).get('/transaction/balance/receiver');
+
+    expect(response.body.status.code).toBe(EnumResponseStatus.BalanceNotEnough);
+    expect(giverBalanceResponse.body.data).toBe(100);
+    expect(receiverBalanceResponse.body.data).toBe(200);
   });
 });
 

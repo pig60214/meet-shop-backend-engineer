@@ -7,6 +7,7 @@ import TransactionService from '../services/TransactionService';
 import ITransactionRequest from '../models/ITransactionRequest';
 import ITransactionResult from '../models/ITransactionResult';
 import IApiResponse from '../models/IApiResponse';
+import ITransferTransactionRequest from './ITransferTransactionRequest';
 
 @Route('transaction')
 @Tags('Transaction')
@@ -14,7 +15,7 @@ export class TransactionControlle extends Controller {
   private transactionService = new TransactionService();
 
   /**
-   * Potential response status: AccountNotExists
+   * Potential response status: AccountNotExist
    * @summary Get the balance of an account
    */
   @Get('/balance/{name}')
@@ -24,7 +25,7 @@ export class TransactionControlle extends Controller {
   }
 
   /**
-   * Potential response status: ValidationFailed, AccountNotExists
+   * Potential response status: ValidationFailed, AccountNotExist
    * @summary Deposit to an account
    */
   @Post('/deposit')
@@ -34,12 +35,22 @@ export class TransactionControlle extends Controller {
   }
 
   /**
-   * Potential response status: ValidationFailed, AccountNotExists, BalanceNotEnough
+   * Potential response status: ValidationFailed, AccountNotExist, BalanceNotEnough
    * @summary Withdraw from an account
    */
   @Post('/withdraw')
   public async withdraw(@Body() transaction: ITransactionRequest): Promise<IApiResponse<ITransactionResult>> {
     const response = await this.transactionService.withdraw(transaction);
+    return response;
+  }
+
+  /**
+   * Potential response status: ValidationFailed, AccountNotExist, ReceiverNotExist, BalanceNotEnough
+   * @summary Transfer from one account to another account
+   */
+  @Post('/transfer')
+  public async transfer(@Body() transaction: ITransferTransactionRequest): Promise<IApiResponse<ITransactionResult>> {
+    const response = await this.transactionService.transfer(transaction);
     return response;
   }
 }

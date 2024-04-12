@@ -1,4 +1,5 @@
 /* eslint-disable class-methods-use-this */
+import ITransferTransactionRequest from '../controllers/ITransferTransactionRequest';
 import IApiResponse from '../models/IApiResponse';
 import ITransactionRequest from '../models/ITransactionRequest';
 import ITransactionResult from '../models/ITransactionResult';
@@ -23,6 +24,11 @@ export default class TransactionService {
 
   async withdraw(transaction: ITransactionRequest): Promise<IApiResponse<ITransactionResult>> {
     const response = await this.transactionRepository.withdraw(transaction);
+    return response;
+  }
+
+  async transfer(transaction: ITransferTransactionRequest): Promise<IApiResponse<ITransactionResult>> {
+    const response = await this.transactionRepository.transfer(transaction);
     return response;
   }
 }

@@ -1,4 +1,5 @@
 /* eslint-disable class-methods-use-this */
+import ITransferTransactionRequest from '../controllers/ITransferTransactionRequest';
 import accounts from '../data/accounts';
 import ApiResponse from '../models/ApiResponse';
 import ApiResponseError from '../models/ApiResponseError';
@@ -16,7 +17,7 @@ export default class TransactionRepository {
     if (account) {
       return new ApiResponse(account.balance);
     }
-    return new ApiResponseError(EnumResponseStatus.AccountNotExists);
+    return new ApiResponseError(EnumResponseStatus.AccountNotExist);
   }
 
   async deposit(transaction: ITransactionRequest): Promise<IApiResponse<ITransactionResult>> {
@@ -31,7 +32,7 @@ export default class TransactionRepository {
       return new ApiResponse(result);
     }
 
-    return new ApiResponseError(EnumResponseStatus.AccountNotExists);
+    return new ApiResponseError(EnumResponseStatus.AccountNotExist);
   }
 
   async withdraw(transaction: ITransactionRequest): Promise<IApiResponse<ITransactionResult>> {
@@ -51,6 +52,30 @@ export default class TransactionRepository {
       return new ApiResponse(result);
     }
 
-    return new ApiResponseError(EnumResponseStatus.AccountNotExists);
+    return new ApiResponseError(EnumResponseStatus.AccountNotExist);
+  }
+
+  async transfer(transaction: ITransferTransactionRequest): Promise<IApiResponse<ITransactionResult>> {
+    const giver = accounts.find(a => a.name === transaction.giver);
+    if (!giver) return new ApiResponseError(EnumResponseStatus.AccountNotExist);
+
+    const receiver = accounts.find(a => a.name === transaction.receiver);
+    if (!receiver) return new ApiResponseError(EnumResponseStatus.ReceiverNotExist);
+
+    await TransactionRepository.mutex.acquire(giver.name);
+    await TransactionRepository.mutex.acquire(receiver.name);
+    if (giver.balance < transaction.amount) {
+      TransactionRepository.mutex.release(giver.name);
+      TransactionRepository.mutex.release(receiver.name);
+      return new ApiResponseError(EnumResponseStatus.BalanceNotEnough);
+    }
+    const beforeBalance = giver.balance;
+    giver.balance -= transaction.amount;
+    receiver.balance += transaction.amount;
+
+    const result = { beforeBalance, afterBalance: giver.balance };
+    TransactionRepository.mutex.release(giver.name);
+    TransactionRepository.mutex.release(receiver.name);
+    return new ApiResponse(result);
   }
 }

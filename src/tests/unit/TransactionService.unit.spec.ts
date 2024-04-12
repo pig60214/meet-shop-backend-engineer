@@ -4,6 +4,7 @@ import ITransactionRequest from '../../models/ITransactionRequest';
 import ITransactionResult from '../../models/ITransactionResult';
 import IApiResponse from '../../models/IApiResponse';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
+import ITransferTransactionRequest from '../../controllers/ITransferTransactionRequest';
 
 const responseFromRepo: IApiResponse<ITransactionResult> = {
   status: {
@@ -68,6 +69,21 @@ describe('TransactionService', () => {
 
     expect(mockRepoWithdraw).toHaveBeenCalledTimes(1);
     expect(mockRepoWithdraw).toHaveBeenCalledWith(transaction);
+    expect(response).toEqual(responseFromRepo);
+  });
+
+  it('Transfer: call TransactionRepository.transfer() and return the result from it', async () => {
+    const mockRepoTransfer = jest.spyOn(transactionRepository, 'transfer').mockResolvedValue(responseFromRepo);
+
+    const transaction: ITransferTransactionRequest = {
+      giver: 'test1',
+      receiver: 'test',
+      amount: 100,
+    };
+    const response = await transactionService.transfer(transaction);
+
+    expect(mockRepoTransfer).toHaveBeenCalledTimes(1);
+    expect(mockRepoTransfer).toHaveBeenCalledWith(transaction);
     expect(response).toEqual(responseFromRepo);
   });
 });
