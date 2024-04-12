@@ -33,13 +33,13 @@ describe('TransactionController.GetBalance', () => {
 
     const response = await agent.get('/transaction/balance/test');
 
-    expect(response.body.status.code).toBe(EnumResponseStatus.Success);
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
     expect(response.body.data).toBe(100);
   });
 
   it('Account not existed', async () => {
     const response = await agent.get('/transaction/balance/test');
-    expect(response.body.status.code).toBe(EnumResponseStatus.AccountNotExist);
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.AccountNotExist]);
   });
 });
 
@@ -53,7 +53,7 @@ describe('TransactionController.Deposit', () => {
 
     const response = await agent.post('/transaction/deposit').send(transaction);
 
-    expect(response.body.status.code).toBe(EnumResponseStatus.Success);
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
     expect(response.body.data.beforeBalance).toBe(100);
     expect(response.body.data.afterBalance).toBe(200);
   });
@@ -63,12 +63,12 @@ describe('TransactionController.Deposit', () => {
 
     const response = await agent.post('/transaction/deposit').send(transactionZeroAmount);
 
-    expect(response.body.status.code).toBe(EnumResponseStatus.ValidationFailed);
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
   });
 
   it('Account not existed', async () => {
     const response = await agent.post('/transaction/deposit').send(transaction);
-    expect(response.body.status.code).toBe(EnumResponseStatus.AccountNotExist);
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.AccountNotExist]);
   });
 });
 
@@ -82,7 +82,7 @@ describe('TransactionController.Withdraw', () => {
 
     const response = await agent.post('/transaction/withdraw').send(transaction);
 
-    expect(response.body.status.code).toBe(EnumResponseStatus.Success);
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
     expect(response.body.data.afterBalance).toBe(0);
   });
 
@@ -91,12 +91,12 @@ describe('TransactionController.Withdraw', () => {
 
     const response = await agent.post('/transaction/withdraw').send(transactionZeroAmount);
 
-    expect(response.body.status.code).toBe(EnumResponseStatus.ValidationFailed);
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
   });
 
   it('Account not existed', async () => {
     const response = await agent.post('/transaction/withdraw').send(transaction);
-    expect(response.body.status.code).toBe(EnumResponseStatus.AccountNotExist);
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.AccountNotExist]);
   });
 
   it('Withdrawing over the balance should get BalanceNotEnough', async () => {
@@ -108,7 +108,7 @@ describe('TransactionController.Withdraw', () => {
     };
     const response = await agent.post('/transaction/withdraw').send(withdrawOverBalance);
 
-    expect(response.body.status.code).toBe(EnumResponseStatus.BalanceNotEnough);
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.BalanceNotEnough]);
   });
 });
 
@@ -135,7 +135,7 @@ describe('TransactionController.Transfer', () => {
     const response = await agent.post('/transaction/transfer').send(transferTransaction);
     const receiverBalanceResponse = await agent.get('/transaction/balance/receiver');
 
-    expect(response.body.status.code).toBe(EnumResponseStatus.Success);
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
     expect(response.body.data.afterBalance).toBe(60);
     expect(receiverBalanceResponse.body.data).toBe(240);
   });
@@ -152,7 +152,7 @@ describe('TransactionController.Transfer', () => {
 
     const response = await agent.post('/transaction/transfer').send(transferZero);
 
-    expect(response.body.status.code).toBe(EnumResponseStatus.ValidationFailed);
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
   });
 
   it('Giver not existed and the balance of receiver should be the same', async () => {
@@ -161,7 +161,7 @@ describe('TransactionController.Transfer', () => {
     const response = await agent.post('/transaction/transfer').send(transferTransaction);
     const receiverBalanceResponse = await agent.get('/transaction/balance/receiver');
 
-    expect(response.body.status.code).toBe(EnumResponseStatus.AccountNotExist);
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.AccountNotExist]);
     expect(receiverBalanceResponse.body.data).toBe(200);
   });
 
@@ -172,7 +172,7 @@ describe('TransactionController.Transfer', () => {
 
     const giverBalanceResponse = await agent.get('/transaction/balance/test');
 
-    expect(response.body.status.code).toBe(EnumResponseStatus.ReceiverNotExist);
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ReceiverNotExist]);
     expect(giverBalanceResponse.body.data).toBe(100);
   });
 
@@ -190,7 +190,7 @@ describe('TransactionController.Transfer', () => {
     const giverBalanceResponse = await agent.get('/transaction/balance/test');
     const receiverBalanceResponse = await agent.get('/transaction/balance/receiver');
 
-    expect(response.body.status.code).toBe(EnumResponseStatus.BalanceNotEnough);
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.BalanceNotEnough]);
     expect(giverBalanceResponse.body.data).toBe(100);
     expect(receiverBalanceResponse.body.data).toBe(200);
   });
