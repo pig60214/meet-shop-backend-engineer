@@ -4,15 +4,15 @@ import ApiResponseError from '../models/ApiResponseError';
 import IAccount from '../models/IAccount';
 import IApiResponse from '../models/IApiResponse';
 import EnumResponseStatus from '../models/enums/EnumResponseStatus';
-import accounts from '../data/accounts';
+import AccountSp from '../data/accounts';
 
 export default class AccountRepository {
   async create(account: IAccount): Promise<IApiResponse> {
-    if (accounts.find(a => a.name === account.name)) {
+    if (AccountSp.findByName(account.name)) {
       return new ApiResponseError(EnumResponseStatus.AccountExists);
     }
 
-    accounts.push(account);
+    AccountSp.insert(account);
     return new ApiResponse();
   }
 }

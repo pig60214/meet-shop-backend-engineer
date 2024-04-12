@@ -14,7 +14,7 @@
     "test:unit": "jest --testPathPattern=unit\\.spec\\.ts",
     "test:int": "jest --testPathPattern=int\\.spec\\.ts",
     "test:coverage": "jest --coverage",
-    "test:watch": "jest --watchAll --detectOpenHandles --testPathPattern=unit\\.spec\\.ts"
+    "test:watch": "jest --watchAll --detectOpenHandles"
   },
   "keywords": [],
   "author": "",

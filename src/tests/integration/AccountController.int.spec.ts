@@ -2,7 +2,7 @@ import request from 'supertest';
 import IAccount from '../../models/IAccount';
 import app from '../../app';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
-import accounts from '../../data/accounts';
+import AccountSp from '../../data/accounts';
 
 const account: IAccount = {
   name: 'test',
@@ -18,7 +18,7 @@ const agent = request(app);
 
 describe('AccountController', () => {
   beforeEach(() => {
-    accounts.length = 0;
+    AccountSp.forTesting.clear();
   });
 
   it('Create account', async () => {

@@ -1,17 +1,17 @@
 import request, { Response } from 'supertest';
 import app from '../../app';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
-import accounts from '../../data/accounts';
+import AccountSp from '../../data/accounts';
 
 const agent = request(app);
 
 describe('Other', () => {
   beforeEach(() => {
-    accounts.length = 0;
+    AccountSp.forTesting.clear();
   });
 
   it('Correct Order', async () => {
-    accounts.push({ name: 'test', balance: 0 });
+    AccountSp.insert({ name: 'test', balance: 0 });
     const promises = [];
 
     let response1 = {} as Response;
