@@ -21,22 +21,24 @@ const transactionZeroAmount: ITransactionRequest = {
   amount: 0,
 };
 
+const agent = request(app);
+
 describe('TransactionController.GetBalance', () => {
   beforeEach(() => {
     accounts.length = 0;
   });
 
   it('GetBalance', async () => {
-    await request(app).post('/account/create').send(account);
+    await agent.post('/account/create').send(account);
 
-    const response = await request(app).get('/transaction/balance/test');
+    const response = await agent.get('/transaction/balance/test');
 
     expect(response.body.status.code).toBe(EnumResponseStatus.Success);
     expect(response.body.data).toBe(100);
   });
 
   it('Account not existed', async () => {
-    const response = await request(app).get('/transaction/balance/test');
+    const response = await agent.get('/transaction/balance/test');
     expect(response.body.status.code).toBe(EnumResponseStatus.AccountNotExist);
   });
 });
@@ -47,9 +49,9 @@ describe('TransactionController.Deposit', () => {
   });
 
   it('Deposit', async () => {
-    await request(app).post('/account/create').send(account);
+    await agent.post('/account/create').send(account);
 
-    const response = await request(app).post('/transaction/deposit').send(transaction);
+    const response = await agent.post('/transaction/deposit').send(transaction);
 
     expect(response.body.status.code).toBe(EnumResponseStatus.Success);
     expect(response.body.data.beforeBalance).toBe(100);
@@ -57,15 +59,15 @@ describe('TransactionController.Deposit', () => {
   });
 
   it('Transaction minimum is 1. Depositing zero should get ValidationFailed', async () => {
-    await request(app).post('/account/create').send(account);
+    await agent.post('/account/create').send(account);
 
-    const response = await request(app).post('/transaction/deposit').send(transactionZeroAmount);
+    const response = await agent.post('/transaction/deposit').send(transactionZeroAmount);
 
     expect(response.body.status.code).toBe(EnumResponseStatus.ValidationFailed);
   });
 
   it('Account not existed', async () => {
-    const response = await request(app).post('/transaction/deposit').send(transaction);
+    const response = await agent.post('/transaction/deposit').send(transaction);
     expect(response.body.status.code).toBe(EnumResponseStatus.AccountNotExist);
   });
 });
@@ -76,35 +78,35 @@ describe('TransactionController.Withdraw', () => {
   });
 
   it('Withdraw', async () => {
-    await request(app).post('/account/create').send(account);
+    await agent.post('/account/create').send(account);
 
-    const response = await request(app).post('/transaction/withdraw').send(transaction);
+    const response = await agent.post('/transaction/withdraw').send(transaction);
 
     expect(response.body.status.code).toBe(EnumResponseStatus.Success);
     expect(response.body.data.afterBalance).toBe(0);
   });
 
   it('Transaction minimum is 1. Withdrawing zero should get ValidationFailed', async () => {
-    await request(app).post('/account/create').send(account);
+    await agent.post('/account/create').send(account);
 
-    const response = await request(app).post('/transaction/withdraw').send(transactionZeroAmount);
+    const response = await agent.post('/transaction/withdraw').send(transactionZeroAmount);
 
     expect(response.body.status.code).toBe(EnumResponseStatus.ValidationFailed);
   });
 
   it('Account not existed', async () => {
-    const response = await request(app).post('/transaction/withdraw').send(transaction);
+    const response = await agent.post('/transaction/withdraw').send(transaction);
     expect(response.body.status.code).toBe(EnumResponseStatus.AccountNotExist);
   });
 
   it('Withdrawing over the balance should get BalanceNotEnough', async () => {
-    await request(app).post('/account/create').send(account);
+    await agent.post('/account/create').send(account);
 
     const withdrawOverBalance: ITransactionRequest = {
       receiver: 'test',
       amount: 200,
     };
-    const response = await request(app).post('/transaction/withdraw').send(withdrawOverBalance);
+    const response = await agent.post('/transaction/withdraw').send(withdrawOverBalance);
 
     expect(response.body.status.code).toBe(EnumResponseStatus.BalanceNotEnough);
   });
@@ -127,11 +129,11 @@ describe('TransactionController.Transfer', () => {
   };
 
   it('Transfer', async () => {
-    await request(app).post('/account/create').send(account);
-    await request(app).post('/account/create').send(receiverAccount);
+    await agent.post('/account/create').send(account);
+    await agent.post('/account/create').send(receiverAccount);
 
-    const response = await request(app).post('/transaction/transfer').send(transferTransaction);
-    const receiverBalanceResponse = await request(app).get('/transaction/balance/receiver');
+    const response = await agent.post('/transaction/transfer').send(transferTransaction);
+    const receiverBalanceResponse = await agent.get('/transaction/balance/receiver');
 
     expect(response.body.status.code).toBe(EnumResponseStatus.Success);
     expect(response.body.data.afterBalance).toBe(60);
@@ -139,8 +141,8 @@ describe('TransactionController.Transfer', () => {
   });
 
   it('Transaction minimum is 1. Transfering zero should get ValidationFailed', async () => {
-    await request(app).post('/account/create').send(account);
-    await request(app).post('/account/create').send(receiverAccount);
+    await agent.post('/account/create').send(account);
+    await agent.post('/account/create').send(receiverAccount);
 
     const transferZero: ITransferTransactionRequest = {
       giver: 'test',
@@ -148,35 +150,35 @@ describe('TransactionController.Transfer', () => {
       amount: 0,
     };
 
-    const response = await request(app).post('/transaction/transfer').send(transferZero);
+    const response = await agent.post('/transaction/transfer').send(transferZero);
 
     expect(response.body.status.code).toBe(EnumResponseStatus.ValidationFailed);
   });
 
   it('Giver not existed and the balance of receiver should be the same', async () => {
-    await request(app).post('/account/create').send(receiverAccount);
+    await agent.post('/account/create').send(receiverAccount);
 
-    const response = await request(app).post('/transaction/transfer').send(transferTransaction);
-    const receiverBalanceResponse = await request(app).get('/transaction/balance/receiver');
+    const response = await agent.post('/transaction/transfer').send(transferTransaction);
+    const receiverBalanceResponse = await agent.get('/transaction/balance/receiver');
 
     expect(response.body.status.code).toBe(EnumResponseStatus.AccountNotExist);
     expect(receiverBalanceResponse.body.data).toBe(200);
   });
 
   it('Receiver not existed and the balance of giver should be the same', async () => {
-    await request(app).post('/account/create').send(account);
+    await agent.post('/account/create').send(account);
 
-    const response = await request(app).post('/transaction/transfer').send(transferTransaction);
+    const response = await agent.post('/transaction/transfer').send(transferTransaction);
 
-    const giverBalanceResponse = await request(app).get('/transaction/balance/test');
+    const giverBalanceResponse = await agent.get('/transaction/balance/test');
 
     expect(response.body.status.code).toBe(EnumResponseStatus.ReceiverNotExist);
     expect(giverBalanceResponse.body.data).toBe(100);
   });
 
   it('Transfering over the balance of the giver should get BalanceNotEnough. Balances of giver and receiver are the same', async () => {
-    await request(app).post('/account/create').send(account);
-    await request(app).post('/account/create').send(receiverAccount);
+    await agent.post('/account/create').send(account);
+    await agent.post('/account/create').send(receiverAccount);
 
     const transferOverBalance: ITransferTransactionRequest = {
       giver: 'test',
@@ -184,9 +186,9 @@ describe('TransactionController.Transfer', () => {
       amount: 150,
     };
 
-    const response = await request(app).post('/transaction/transfer').send(transferOverBalance);
-    const giverBalanceResponse = await request(app).get('/transaction/balance/test');
-    const receiverBalanceResponse = await request(app).get('/transaction/balance/receiver');
+    const response = await agent.post('/transaction/transfer').send(transferOverBalance);
+    const giverBalanceResponse = await agent.get('/transaction/balance/test');
+    const receiverBalanceResponse = await agent.get('/transaction/balance/receiver');
 
     expect(response.body.status.code).toBe(EnumResponseStatus.BalanceNotEnough);
     expect(giverBalanceResponse.body.data).toBe(100);

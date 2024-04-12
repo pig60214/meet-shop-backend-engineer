@@ -14,24 +14,26 @@ const accountWithNegativeBalance: IAccount = {
   balance: -1,
 };
 
+const agent = request(app);
+
 describe('AccountController', () => {
   beforeEach(() => {
     accounts.length = 0;
   });
 
   it('Create account', async () => {
-    const response = await request(app).post('/account/create').send(account);
+    const response = await agent.post('/account/create').send(account);
     expect(response.body.status.code).toBe(EnumResponseStatus.Success);
   });
 
   it('Create existing account', async () => {
-    await request(app).post('/account/create').send(account);
-    const response = await request(app).post('/account/create').send(account);
+    await agent.post('/account/create').send(account);
+    const response = await agent.post('/account/create').send(account);
     expect(response.body.status.code).toBe(EnumResponseStatus.AccountExists);
   });
 
   it('Create account with negative balance', async () => {
-    const response = await request(app).post('/account/create').send(accountWithNegativeBalance);
+    const response = await agent.post('/account/create').send(accountWithNegativeBalance);
     expect(response.body.status.code).toBe(EnumResponseStatus.ValidationFailed);
   });
 });
