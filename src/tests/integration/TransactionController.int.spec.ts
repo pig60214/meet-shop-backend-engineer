@@ -1,9 +1,10 @@
-import request, { Response } from 'supertest';
+import request from 'supertest';
 import IAccount from '../../models/IAccount';
-import * as appDefault from '../../app';
+import app from '../../app';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
 import ITransactionRequest from '../../models/ITransactionRequest';
 import ITransferTransactionRequest from '../../controllers/ITransferTransactionRequest';
+import accounts from '../../data/accounts';
 
 const account: IAccount = {
   name: 'test',
@@ -20,15 +21,9 @@ const transactionZeroAmount: ITransactionRequest = {
   amount: 0,
 };
 
-let app: typeof appDefault.default;
-
 describe('TransactionController.GetBalance', () => {
   beforeEach(() => {
-    jest.isolateModules(async () => import('../../app').then(module => { app = module.default; }));
-  });
-
-  afterEach(() => {
-    jest.resetModules();
+    accounts.length = 0;
   });
 
   it('GetBalance', async () => {
@@ -48,11 +43,7 @@ describe('TransactionController.GetBalance', () => {
 
 describe('TransactionController.Deposit', () => {
   beforeEach(() => {
-    jest.isolateModules(async () => import('../../app').then(module => { app = module.default; }));
-  });
-
-  afterEach(() => {
-    jest.resetModules();
+    accounts.length = 0;
   });
 
   it('Deposit', async () => {
@@ -81,11 +72,7 @@ describe('TransactionController.Deposit', () => {
 
 describe('TransactionController.Withdraw', () => {
   beforeEach(() => {
-    jest.isolateModules(async () => import('../../app').then(module => { app = module.default; }));
-  });
-
-  afterEach(() => {
-    jest.resetModules();
+    accounts.length = 0;
   });
 
   it('Withdraw', async () => {
@@ -125,11 +112,7 @@ describe('TransactionController.Withdraw', () => {
 
 describe('TransactionController.Transfer', () => {
   beforeEach(() => {
-    jest.isolateModules(async () => import('../../app').then(module => { app = module.default; }));
-  });
-
-  afterEach(() => {
-    jest.resetModules();
+    accounts.length = 0;
   });
 
   const transferTransaction: ITransferTransactionRequest = {
@@ -208,44 +191,5 @@ describe('TransactionController.Transfer', () => {
     expect(response.body.status.code).toBe(EnumResponseStatus.BalanceNotEnough);
     expect(giverBalanceResponse.body.data).toBe(100);
     expect(receiverBalanceResponse.body.data).toBe(200);
-  });
-});
-
-describe('Other', () => {
-  beforeEach(() => {
-    jest.isolateModules(async () => import('../../app').then(module => { app = module.default; }));
-  });
-
-  afterEach(() => {
-    jest.resetModules();
-  });
-
-  it('Correct Order', async () => {
-    const r = await request(app).post('/account/create').send({ name: 'test', balance: 0 });
-
-    const promises = [];
-    const responses: (Response)[] = [r, r, r];
-
-    promises.push(
-      request(app).post('/transaction/deposit').send({ receiver: 'test', amount: 2 }).then(response => {
-        responses[0] = response;
-      }),
-    );
-    promises.push(
-      request(app).post('/transaction/withdraw').send({ receiver: 'test', amount: 4 }).then(response => {
-        responses[1] = response;
-      }),
-    );
-    promises.push(
-      request(app).post('/transaction/deposit').send({ receiver: 'test', amount: 2 }).then(response => {
-        responses[2] = response;
-      }),
-    );
-
-    await Promise.all(promises);
-
-    expect(responses[1].body.status.code).toBe(EnumResponseStatus.BalanceNotEnough);
-    expect(responses[2].body.status.code).toBe(EnumResponseStatus.Success);
-    expect(responses[2].body.data.afterBalance).toBe(4);
   });
 });

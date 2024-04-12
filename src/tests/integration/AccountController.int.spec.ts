@@ -1,7 +1,8 @@
 import request from 'supertest';
 import IAccount from '../../models/IAccount';
-import * as appDefault from '../../app';
+import app from '../../app';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
+import accounts from '../../data/accounts';
 
 const account: IAccount = {
   name: 'test',
@@ -13,15 +14,9 @@ const accountWithNegativeBalance: IAccount = {
   balance: -1,
 };
 
-let app: typeof appDefault.default;
-
 describe('AccountController', () => {
   beforeEach(() => {
-    jest.isolateModules(async () => import('../../app').then(module => { app = module.default; }));
-  });
-
-  afterEach(() => {
-    jest.resetModules();
+    accounts.length = 0;
   });
 
   it('Create account', async () => {
