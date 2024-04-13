@@ -19,7 +19,7 @@ afterAll(async () => {
 
 describe('TransactionController.GetBalance', () => {
   it('Success', async () => {
-    await redis.set('test', '{\"name\":\"test\",\"balance\":100}');
+    await agent.post('/account/create').send({ name: 'test', balance: 100 });
     const response = await agent.get('/transaction/balance/test');
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
     expect(response.body.data).toBe(100);
@@ -28,7 +28,7 @@ describe('TransactionController.GetBalance', () => {
 
 describe('TransactionController.Deposit', () => {
   it('Success', async () => {
-    await redis.set('test', '{\"name\":\"test\",\"balance\":100}');
+    await agent.post('/account/create').send({ name: 'test', balance: 100 });
 
     const transaction: ITransactionRequest = { receiver: 'test', amount: 100 };
     const response = await agent.post('/transaction/deposit').send(transaction);
@@ -52,7 +52,7 @@ describe('TransactionController.Deposit', () => {
 
 describe('TransactionController.Withdraw', () => {
   it('Success', async () => {
-    await redis.set('test', '{\"name\":\"test\",\"balance\":100}');
+    await agent.post('/account/create').send({ name: 'test', balance: 100 });
 
     const transaction = { receiver: 'test', amount: 100 };
     const response = await agent.post('/transaction/withdraw').send(transaction);
@@ -78,8 +78,8 @@ describe('TransactionController.Withdraw', () => {
 
 describe('TransactionController.Transfer', () => {
   it('Success', async () => {
-    await redis.set('giver', '{\"name\":\"giver\",\"balance\":100}');
-    await redis.set('receiver', '{\"name\":\"receiver\",\"balance\":200}');
+    await agent.post('/account/create').send({ name: 'giver', balance: 100 });
+    await agent.post('/account/create').send({ name: 'receiver', balance: 200 });
 
     const transaction: ITransferTransactionRequest = { giver: 'giver', receiver: 'receiver', amount: 40 };
     const response = await agent.post('/transaction/transfer').send(transaction);
