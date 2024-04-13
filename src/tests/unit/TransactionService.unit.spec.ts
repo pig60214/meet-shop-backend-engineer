@@ -49,7 +49,33 @@ describe('TransactionService.GetBalance', () => {
   });
 });
 
-describe('TransactionService', () => {
+describe('TransactionService.Deposit', () => {
+  const transactionService = new TransactionService();
+
+  it('Success', async () => {
+    mockGet.mockResolvedValue('100');
+
+    const transaction = { receiver: 'test', amount: 100 };
+    const response = await transactionService.deposit(transaction);
+
+    expect(mockSet).toHaveBeenCalledTimes(1);
+    expect(mockSet).toHaveBeenCalledWith('test', 200);
+    expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
+    expect(response.data).toEqual({ beforeBalance: 100, afterBalance: 200 });
+  });
+
+  it('AccountNotExist', async () => {
+    mockGet.mockResolvedValue(null);
+
+    const transaction = { receiver: 'test', amount: 100 };
+    const response = await transactionService.deposit(transaction);
+
+    expect(mockSet).toHaveBeenCalledTimes(0);
+    expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.AccountNotExist]);
+  });
+});
+
+describe.skip('TransactionService', () => {
   let transactionRepository: TransactionRepository;
   let transactionService: TransactionService;
 

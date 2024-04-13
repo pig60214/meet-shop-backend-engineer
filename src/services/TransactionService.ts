@@ -29,8 +29,14 @@ export default class TransactionService {
   }
 
   async deposit(transaction: ITransactionRequest): Promise<IApiResponse<ITransactionResult>> {
-    const response = await this.transactionRepository.deposit(transaction);
-    return response;
+    const balanceStr = await redis.get(transaction.receiver);
+    if (balanceStr) {
+      const beforeBalance = Number(balanceStr);
+      const afterBalance = beforeBalance + transaction.amount;
+      await redis.set(transaction.receiver, afterBalance);
+      return new ApiResponse({ beforeBalance, afterBalance });
+    }
+    return new ApiResponseError(EnumResponseStatus.AccountNotExist);
   }
 
   async withdraw(transaction: ITransactionRequest): Promise<IApiResponse<ITransactionResult>> {

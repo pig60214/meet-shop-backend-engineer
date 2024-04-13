@@ -11,7 +11,7 @@ const agent = request(app);
 
 console.info = jest.fn();
 
-describe('TransactionController', () => {
+describe.only('TransactionController', () => {
   beforeEach(async () => {
     await redis.flushall();
   });
@@ -20,11 +20,21 @@ describe('TransactionController', () => {
     await redis.quit();
   });
 
-  it.only('GetBalance', async () => {
+  it('GetBalance', async () => {
     await redis.set('test', 100);
     const response = await agent.get('/transaction/balance/test');
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
     expect(response.body.data).toBe(100);
+  });
+
+  it('Deposit', async () => {
+    await redis.set('test', 100);
+
+    const transaction: ITransactionRequest = { receiver: 'test', amount: 100 };
+    const response = await agent.post('/transaction/deposit').send(transaction);
+
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
+    expect(response.body.data).toEqual({ beforeBalance: 100, afterBalance: 200 });
   });
 });
 
