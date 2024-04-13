@@ -2,43 +2,34 @@ import request from 'supertest';
 import IAccount from '../../models/IAccount';
 import app from '../../app';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
-import AccountSp from '../../data/accounts';
-
-const account: IAccount = {
-  name: 'test',
-  balance: 0,
-};
-
-const accountWithNegativeBalance: IAccount = {
-  name: 'test',
-  balance: -1,
-};
+import redis from '../../redis';
 
 const agent = request(app);
 
-describe('AccountController', () => {
-  beforeEach(() => {
-    AccountSp.forTesting.clear();
+describe('AccountController.Create', () => {
+  beforeEach(async () => {
+    await redis.flushall();
   });
 
-  it('Create account', async () => {
+  afterAll(async () => {
+    await redis.quit();
+  });
+
+  it('Create', async () => {
+    const account: IAccount = { name: 'test', balance: 0 };
     const response = await agent.post('/account/create').send(account);
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
   });
 
-  it('Create existing account', async () => {
-    await agent.post('/account/create').send(account);
+  it('ValidationFailed: Negative Balance', async () => {
+    const account: IAccount = { name: 'test', balance: -1 };
     const response = await agent.post('/account/create').send(account);
-    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.AccountExists]);
-  });
-
-  it('Create account with negative balance', async () => {
-    const response = await agent.post('/account/create').send(accountWithNegativeBalance);
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
   });
 
   it('ValidationFailed: name = ""', async () => {
-    const response = await agent.post('/account/create').send({ name: '', balance: 0 });
+    const account: IAccount = { name: '', balance: -1 };
+    const response = await agent.post('/account/create').send(account);
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
   });
 });

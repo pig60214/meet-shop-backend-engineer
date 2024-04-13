@@ -4,4 +4,5 @@ module.exports = {
   coveragePathIgnorePatterns: [
     '/src/routes'
   ],
+  setupFiles: ['./jest.env-setup.ts'],
 };

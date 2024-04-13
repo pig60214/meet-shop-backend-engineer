@@ -1,36 +1,41 @@
 import IAccount from '../../models/IAccount';
-import IApiResponse from '../../models/IApiResponse';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
-import AccountRepository from '../../repositories/AccountRepository';
+import redis from '../../redis';
 import AccountService from '../../services/AccountService';
 
-describe('AccountService', () => {
-  let accountRepository: AccountRepository;
-  let accountService: AccountService;
+describe('AccountService.Create', () => {
+  const accountService = new AccountService();
+  const mockGet = jest.spyOn(redis, 'get');
+  const mockSet = jest.spyOn(redis, 'set');
 
-  beforeEach(() => {
-    accountRepository = new AccountRepository();
-    accountService = new AccountService(accountRepository);
+  afterAll(async () => {
+    await redis.quit();
   });
 
-  it('Create: call AccountRepository.create() and return the result from it', async () => {
-    const responseFromRepo: IApiResponse = {
-      status: {
-        code: EnumResponseStatus.Success,
-        message: EnumResponseStatus[EnumResponseStatus.Success],
-      },
-    };
-    const mockRepoCreate = jest.spyOn(accountRepository, 'create').mockResolvedValue(responseFromRepo);
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
-    const account: IAccount = {
-      name: 'test',
-      balance: 0,
-    };
+  it('Success', async () => {
+    mockGet.mockResolvedValue(null);
 
+    const account: IAccount = { name: 'test', balance: 0 };
     const response = await accountService.create(account);
 
-    expect(mockRepoCreate).toHaveBeenCalledTimes(1);
-    expect(mockRepoCreate).toHaveBeenCalledWith(account);
-    expect(response).toEqual(responseFromRepo);
+    expect(mockGet).toHaveBeenCalledTimes(1);
+    expect(mockGet).toHaveBeenCalledWith('test');
+    expect(mockSet).toHaveBeenCalledTimes(1);
+    expect(mockSet).toHaveBeenCalledWith('test', 0);
+    expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
+  });
+
+  it('AccountExists', async () => {
+    mockGet.mockResolvedValue('0');
+
+    const account: IAccount = { name: 'test', balance: 0 };
+    const response = await accountService.create(account);
+
+    expect(mockSet).toHaveBeenCalledTimes(0);
+    expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.AccountExists]);
   });
 });

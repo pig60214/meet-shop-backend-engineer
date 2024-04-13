@@ -1,17 +1,20 @@
 /* eslint-disable class-methods-use-this */
+import ApiResponse from '../models/ApiResponse';
+import ApiResponseError from '../models/ApiResponseError';
 import IAccount from '../models/IAccount';
 import IApiResponse from '../models/IApiResponse';
-import AccountRepository from '../repositories/AccountRepository';
+import EnumResponseStatus from '../models/enums/EnumResponseStatus';
+import redis from '../redis';
 
 export default class AccountService {
-  private accountRepository: AccountRepository;
+  async create(request: IAccount): Promise<IApiResponse> {
+    const account = await redis.get(request.name);
 
-  constructor(accountRepository?: AccountRepository) {
-    this.accountRepository = accountRepository ?? new AccountRepository();
-  }
+    if (!account) {
+      await redis.set(request.name, request.balance);
+      return new ApiResponse();
+    }
 
-  async create(account: IAccount): Promise<IApiResponse> {
-    const response = await this.accountRepository.create(account);
-    return response;
+    return new ApiResponseError(EnumResponseStatus.AccountExists);
   }
 }
