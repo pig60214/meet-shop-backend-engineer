@@ -4,14 +4,20 @@ import ApiResponseError from '../models/ApiResponseError';
 import IAccount from '../models/IAccount';
 import IApiResponse from '../models/IApiResponse';
 import EnumResponseStatus from '../models/enums/EnumResponseStatus';
-import redis from '../redis';
+import AccountRepository from '../repositories/AccountRepository';
 
 export default class AccountService {
+  private accountRepository: AccountRepository;
+
+  constructor(accountRepository?: AccountRepository) {
+    this.accountRepository = accountRepository ?? new AccountRepository();
+  }
+
   async create(request: IAccount): Promise<IApiResponse> {
-    const account = await redis.get(request.name);
+    const account = await this.accountRepository.get(request.name);
 
     if (!account) {
-      await redis.set(request.name, JSON.stringify(request));
+      await this.accountRepository.set(request);
       return new ApiResponse();
     }
 

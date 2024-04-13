@@ -1,6 +1,7 @@
 import IAccount from '../../models/IAccount';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
 import redis from '../../redis';
+import AccountRepository from '../../repositories/AccountRepository';
 import AccountService from '../../services/AccountService';
 
 afterAll(async () => {
@@ -12,12 +13,13 @@ afterEach(() => {
 });
 
 describe('AccountService.Create', () => {
-  const accountService = new AccountService();
-  const mockGet = jest.spyOn(redis, 'get');
-  const mockSet = jest.spyOn(redis, 'set');
+  const acountRepository = new AccountRepository();
+  const accountService = new AccountService(acountRepository);
+  const mockGet = jest.spyOn(acountRepository, 'get');
+  const mockSet = jest.spyOn(acountRepository, 'set');
 
   it('Success', async () => {
-    mockGet.mockResolvedValue(null);
+    mockGet.mockResolvedValue(undefined);
 
     const account: IAccount = { name: 'test', balance: 0 };
     const response = await accountService.create(account);
@@ -25,12 +27,12 @@ describe('AccountService.Create', () => {
     expect(mockGet).toHaveBeenCalledTimes(1);
     expect(mockGet).toHaveBeenCalledWith('test');
     expect(mockSet).toHaveBeenCalledTimes(1);
-    expect(mockSet).toHaveBeenCalledWith('test', JSON.stringify(account));
+    expect(mockSet).toHaveBeenCalledWith(account);
     expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
   });
 
   it('AccountExists', async () => {
-    mockGet.mockResolvedValue('0');
+    mockGet.mockResolvedValue({ name: 'test', balance: 100 });
 
     const account: IAccount = { name: 'test', balance: 0 };
     const response = await accountService.create(account);
