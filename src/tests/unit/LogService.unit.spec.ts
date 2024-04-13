@@ -1,4 +1,9 @@
+import redis from '../../redis';
 import LogService from '../../services/LogService';
+
+afterAll(async () => {
+  await redis.quit();
+});
 
 describe('LogService', () => {
   beforeAll(() => {

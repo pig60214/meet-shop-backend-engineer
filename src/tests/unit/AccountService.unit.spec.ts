@@ -3,18 +3,20 @@ import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
 import redis from '../../redis';
 import AccountService from '../../services/AccountService';
 
+afterAll(async () => {
+  await redis.quit();
+});
+
+afterEach(() => {
+  jest.clearAllMocks();
+});
+
 describe('AccountService.Create', () => {
   const accountService = new AccountService();
   const mockGet = jest.spyOn(redis, 'get');
   const mockSet = jest.spyOn(redis, 'set');
 
-  afterAll(async () => {
-    await redis.quit();
-  });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
 
   it('Success', async () => {
     mockGet.mockResolvedValue(null);

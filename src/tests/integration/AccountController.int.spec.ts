@@ -6,15 +6,15 @@ import redis from '../../redis';
 
 const agent = request(app);
 
+beforeEach(async () => {
+  await redis.flushall();
+});
+
+afterAll(async () => {
+  await redis.quit();
+});
+
 describe('AccountController.Create', () => {
-  beforeEach(async () => {
-    await redis.flushall();
-  });
-
-  afterAll(async () => {
-    await redis.quit();
-  });
-
   it('Create', async () => {
     const account: IAccount = { name: 'test', balance: 0 };
     const response = await agent.post('/account/create').send(account);
