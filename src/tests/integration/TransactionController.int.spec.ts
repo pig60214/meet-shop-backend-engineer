@@ -52,15 +52,11 @@ describe('TransactionController.Deposit', () => {
   });
 });
 
-describe.skip('TransactionController.Withdraw', () => {
-  beforeEach(() => {
-    AccountSp.forTesting.clear();
-  });
+describe('TransactionController.Withdraw', () => {
+  it('Success', async () => {
+    await redis.set('test', '{\"name\":\"test\",\"balance\":100}');
 
-  it('Withdraw', async () => {
-    AccountSp.insert({ name: 'test', balance: 100 });
-
-    const transaction: ITransactionRequest = { receiver: 'test', amount: 100 };
+    const transaction = { receiver: 'test', amount: 100 };
     const response = await agent.post('/transaction/withdraw').send(transaction);
     const balance = await agent.get('/transaction/balance/test');
 
@@ -69,27 +65,16 @@ describe.skip('TransactionController.Withdraw', () => {
     expect(balance.body.data).toBe(0);
   });
 
-  it('Transaction minimum is 1. Withdrawing zero should get ValidationFailed', async () => {
-    AccountSp.insert({ name: 'test', balance: 100 });
-
-    const transactionZeroAmount: ITransactionRequest = { receiver: 'test', amount: 0 };
-    const response = await agent.post('/transaction/withdraw').send(transactionZeroAmount);
-
+  it('ValidationFailed: amount minimum is 1', async () => {
+    const transaction: ITransactionRequest = { receiver: 'test', amount: 0 };
+    const response = await agent.post('/transaction/withdraw').send(transaction);
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
   });
 
-  it('Account not existed', async () => {
-    const response = await agent.post('/transaction/withdraw').send({ receiver: 'test', amount: 100 });
-    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.AccountNotExist]);
-  });
-
-  it('Withdrawing over the balance should get BalanceNotEnough', async () => {
-    AccountSp.insert({ name: 'test', balance: 100 });
-
-    const withdrawOverBalance: ITransactionRequest = { receiver: 'test', amount: 200 };
-    const response = await agent.post('/transaction/withdraw').send(withdrawOverBalance);
-
-    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.BalanceNotEnough]);
+  it('ValidationFailed: receiver sholud not be empty string', async () => {
+    const transaction: ITransactionRequest = { receiver: '', amount: 100 };
+    const response = await agent.post('/transaction/withdraw').send(transaction);
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
   });
 });
 

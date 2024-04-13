@@ -46,8 +46,17 @@ export default class TransactionService {
   }
 
   async withdraw(transaction: ITransactionRequest): Promise<IApiResponse<ITransactionResult>> {
-    const response = await this.transactionRepository.withdraw(transaction);
-    return response;
+    const account = await this.getAccount(transaction.receiver);
+    if (account) {
+      if (account.balance >= transaction.amount) {
+        const beforeBalance = account.balance;
+        account.balance -= transaction.amount;
+        await redis.set(transaction.receiver, JSON.stringify(account));
+        return new ApiResponse({ beforeBalance, afterBalance: account.balance });
+      }
+      return new ApiResponseError(EnumResponseStatus.BalanceNotEnough);
+    }
+    return new ApiResponseError(EnumResponseStatus.AccountNotExist);
   }
 
   async transfer(transaction: ITransferTransactionRequest): Promise<IApiResponse<ITransactionResult>> {

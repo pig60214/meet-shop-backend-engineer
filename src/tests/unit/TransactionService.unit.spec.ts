@@ -75,6 +75,42 @@ describe('TransactionService.Deposit', () => {
   });
 });
 
+describe('TransactionService.Withdraw', () => {
+  const transactionService = new TransactionService();
+
+  it('Success', async () => {
+    mockGet.mockResolvedValue('{\"name\":\"test\",\"balance\":100}');
+
+    const transaction = { receiver: 'test', amount: 100 };
+    const response = await transactionService.withdraw(transaction);
+
+    expect(mockSet).toHaveBeenCalledTimes(1);
+    expect(mockSet).toHaveBeenCalledWith('test', '{\"name\":\"test\",\"balance\":0}');
+    expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
+    expect(response.data).toEqual({ beforeBalance: 100, afterBalance: 0 });
+  });
+
+  it('AccountNotExist', async () => {
+    mockGet.mockResolvedValue(null);
+
+    const transaction = { receiver: 'test', amount: 100 };
+    const response = await transactionService.withdraw(transaction);
+
+    expect(mockSet).toHaveBeenCalledTimes(0);
+    expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.AccountNotExist]);
+  });
+
+  it('BalanceNotEnough', async () => {
+    mockGet.mockResolvedValue('{\"name\":\"test\",\"balance\":100}');
+
+    const transaction = { receiver: 'test', amount: 200 };
+    const response = await transactionService.withdraw(transaction);
+
+    expect(mockSet).toHaveBeenCalledTimes(0);
+    expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.BalanceNotEnough]);
+  });
+});
+
 describe.skip('TransactionService', () => {
   let transactionRepository: TransactionRepository;
   let transactionService: TransactionService;
@@ -82,20 +118,6 @@ describe.skip('TransactionService', () => {
   beforeEach(() => {
     transactionRepository = new TransactionRepository();
     transactionService = new TransactionService(transactionRepository);
-  });
-
-  it('Withdraw: call TransactionRepository.withdraw() and return the result from it', async () => {
-    const mockRepoWithdraw = jest.spyOn(transactionRepository, 'withdraw').mockResolvedValue(responseFromRepo);
-
-    const transaction: ITransactionRequest = {
-      receiver: 'test',
-      amount: 100,
-    };
-    const response = await transactionService.withdraw(transaction);
-
-    expect(mockRepoWithdraw).toHaveBeenCalledTimes(1);
-    expect(mockRepoWithdraw).toHaveBeenCalledWith(transaction);
-    expect(response).toEqual(responseFromRepo);
   });
 
   it('Transfer: call TransactionRepository.transfer() and return the result from it', async () => {
