@@ -16,8 +16,6 @@ describe('AccountService.Create', () => {
   const mockGet = jest.spyOn(redis, 'get');
   const mockSet = jest.spyOn(redis, 'set');
 
-
-
   it('Success', async () => {
     mockGet.mockResolvedValue(null);
 

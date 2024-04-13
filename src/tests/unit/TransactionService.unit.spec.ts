@@ -1,7 +1,7 @@
+import { when } from 'jest-when';
 import TransactionService from '../../services/TransactionService';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
 import redis from '../../redis';
-import { when } from 'jest-when';
 
 console.info = jest.fn();
 
@@ -100,8 +100,8 @@ describe('TransactionService.Transfer', () => {
     const response = await transactionService.transfer(transaction);
 
     expect(mockSet).toHaveBeenCalledTimes(2);
-    expect(mockSet).toHaveBeenCalledWith('giver', '{\"name\":\"giver\",\"balance\":0}')
-    expect(mockSet).toHaveBeenCalledWith('receiver', '{\"name\":\"receiver\",\"balance\":200}')
+    expect(mockSet).toHaveBeenCalledWith('giver', '{\"name\":\"giver\",\"balance\":0}');
+    expect(mockSet).toHaveBeenCalledWith('receiver', '{\"name\":\"receiver\",\"balance\":200}');
     expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
     expect(response.data).toEqual({ beforeBalance: 100, afterBalance: 0 });
   });
@@ -142,5 +142,4 @@ describe('TransactionService.Transfer', () => {
   it.skip('Save Transaction', async () => {
     expect(true).toBe(false);
   });
-
 });
