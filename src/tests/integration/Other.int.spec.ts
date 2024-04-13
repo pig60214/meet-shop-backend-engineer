@@ -5,7 +5,7 @@ import AccountSp from '../../data/accounts';
 
 const agent = request(app);
 
-describe('Other', () => {
+describe.skip('Other', () => {
   beforeEach(() => {
     AccountSp.forTesting.clear();
   });

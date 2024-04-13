@@ -15,5 +15,13 @@
       "no-console": ["error", { "allow": ["error", "info"] }],
       "@typescript-eslint/indent": ["error", 2, { "ignoredNodes": ["PropertyDefinition"], "SwitchCase": 1 }],
       "arrow-parens": "off"
-    }
+    },
+    "overrides": [
+      {
+        "files": ["src/tests/**/*.spec.ts"],
+        "rules": {
+          "no-useless-escape": "off"
+        }
+      }
+    ]
 }

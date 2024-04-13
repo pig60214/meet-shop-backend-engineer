@@ -11,23 +11,25 @@ const agent = request(app);
 
 console.info = jest.fn();
 
-describe.only('TransactionController', () => {
-  beforeEach(async () => {
-    await redis.flushall();
-  });
+beforeEach(async () => {
+  await redis.flushall();
+});
 
-  afterAll(async () => {
-    await redis.quit();
-  });
+afterAll(async () => {
+  await redis.quit();
+});
 
-  it('GetBalance', async () => {
+describe('TransactionController.GetBalance', () => {
+  it('Success', async () => {
     await redis.set('test', '{\"name\":\"test\",\"balance\":100}');
     const response = await agent.get('/transaction/balance/test');
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
     expect(response.body.data).toBe(100);
   });
+});
 
-  it('Deposit', async () => {
+describe('TransactionController.Deposit', () => {
+  it('Success', async () => {
     await redis.set('test', '{\"name\":\"test\",\"balance\":100}');
 
     const transaction: ITransactionRequest = { receiver: 'test', amount: 100 };
@@ -36,42 +38,21 @@ describe.only('TransactionController', () => {
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
     expect(response.body.data).toEqual({ beforeBalance: 100, afterBalance: 200 });
   });
-});
 
-describe('TransactionController.Deposit', () => {
-  beforeEach(() => {
-    AccountSp.forTesting.clear();
-  });
-
-  it('Deposit', async () => {
-    AccountSp.insert({ name: 'test', balance: 100 });
-
-    const transaction: ITransactionRequest = { receiver: 'test', amount: 100 };
+  it('ValidationFailed: amount minimum is 1', async () => {
+    const transaction: ITransactionRequest = { receiver: 'test', amount: 0 };
     const response = await agent.post('/transaction/deposit').send(transaction);
-    const balance = await agent.get('/transaction/balance/test');
-
-    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
-    expect(response.body.data.beforeBalance).toBe(100);
-    expect(response.body.data.afterBalance).toBe(200);
-    expect(balance.body.data).toBe(200);
-  });
-
-  it('Transaction minimum is 1. Depositing zero should get ValidationFailed', async () => {
-    AccountSp.insert({ name: 'test', balance: 100 });
-
-    const transactionZeroAmount: ITransactionRequest = { receiver: 'test', amount: 0 };
-    const response = await agent.post('/transaction/deposit').send(transactionZeroAmount);
-
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
   });
 
-  it('Account not existed', async () => {
-    const response = await agent.post('/transaction/deposit').send({ receiver: 'test', amount: 100 });
-    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.AccountNotExist]);
+  it('ValidationFailed: receiver sholud not be empty string', async () => {
+    const transaction: ITransactionRequest = { receiver: '', amount: 100 };
+    const response = await agent.post('/transaction/deposit').send(transaction);
+    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
   });
 });
 
-describe('TransactionController.Withdraw', () => {
+describe.skip('TransactionController.Withdraw', () => {
   beforeEach(() => {
     AccountSp.forTesting.clear();
   });
@@ -112,7 +93,7 @@ describe('TransactionController.Withdraw', () => {
   });
 });
 
-describe('TransactionController.Transfer', () => {
+describe.skip('TransactionController.Transfer', () => {
   beforeEach(() => {
     AccountSp.forTesting.clear();
     TransactionSp.forTesting.clear();

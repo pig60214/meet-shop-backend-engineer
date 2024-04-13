@@ -84,20 +84,6 @@ describe.skip('TransactionService', () => {
     transactionService = new TransactionService(transactionRepository);
   });
 
-  it('Deposit: call TransactionRepository.deposit() and return the result from it', async () => {
-    const mockRepoDeposit = jest.spyOn(transactionRepository, 'deposit').mockResolvedValue(responseFromRepo);
-
-    const transaction: ITransactionRequest = {
-      receiver: 'test',
-      amount: 100,
-    };
-    const response = await transactionService.deposit(transaction);
-
-    expect(mockRepoDeposit).toHaveBeenCalledTimes(1);
-    expect(mockRepoDeposit).toHaveBeenCalledWith(transaction);
-    expect(response).toEqual(responseFromRepo);
-  });
-
   it('Withdraw: call TransactionRepository.withdraw() and return the result from it', async () => {
     const mockRepoWithdraw = jest.spyOn(transactionRepository, 'withdraw').mockResolvedValue(responseFromRepo);
 
