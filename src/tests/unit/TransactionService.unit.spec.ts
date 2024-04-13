@@ -6,6 +6,7 @@ import IApiResponse from '../../models/IApiResponse';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
 import ITransferTransactionRequest from '../../controllers/ITransferTransactionRequest';
 import LogService from '../../services/LogService';
+import redis from '../../redis';
 
 const responseFromRepo: IApiResponse<ITransactionResult> = {
   status: {
@@ -20,6 +21,34 @@ const responseFromRepo: IApiResponse<ITransactionResult> = {
 
 console.info = jest.fn();
 
+const mockGet = jest.spyOn(redis, 'get');
+const mockSet = jest.spyOn(redis, 'set');
+
+afterAll(async () => {
+  await redis.quit();
+});
+
+afterEach(() => {
+  jest.clearAllMocks();
+});
+
+describe('TransactionService.GetBalance', () => {
+  const transactionService = new TransactionService();
+
+  it('Success', async () => {
+    mockGet.mockResolvedValue('100');
+    const response = await transactionService.getBalance('test');
+    expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
+    expect(response.data).toBe(100);
+  });
+
+  it('AccountNotExist', async () => {
+    mockGet.mockResolvedValue(null);
+    const response = await transactionService.getBalance('test');
+    expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.AccountNotExist]);
+  });
+});
+
 describe('TransactionService', () => {
   let transactionRepository: TransactionRepository;
   let transactionService: TransactionService;
@@ -27,24 +56,6 @@ describe('TransactionService', () => {
   beforeEach(() => {
     transactionRepository = new TransactionRepository();
     transactionService = new TransactionService(transactionRepository);
-  });
-
-  it('GetBalance: call TransactionRepository.getBalance() and return the result from it', async () => {
-    const responseFromRepoGetBalance = {
-      status: {
-        code: EnumResponseStatus.Success,
-        message: EnumResponseStatus[EnumResponseStatus.Success],
-      },
-      data: 0,
-    };
-    const mockRepoGetBalance = jest.spyOn(transactionRepository, 'getBalance').mockResolvedValue(responseFromRepoGetBalance);
-
-    const name = 'test';
-    const response = await transactionService.getBalance(name);
-
-    expect(mockRepoGetBalance).toHaveBeenCalledTimes(1);
-    expect(mockRepoGetBalance).toHaveBeenCalledWith(name);
-    expect(response).toEqual(responseFromRepoGetBalance);
   });
 
   it('Deposit: call TransactionRepository.deposit() and return the result from it', async () => {

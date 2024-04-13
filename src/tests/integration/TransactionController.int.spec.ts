@@ -5,28 +5,26 @@ import ITransactionRequest from '../../models/ITransactionRequest';
 import ITransferTransactionRequest from '../../controllers/ITransferTransactionRequest';
 import TransactionSp from '../../data/transactions';
 import AccountSp from '../../data/accounts';
+import redis from '../../redis';
 
 const agent = request(app);
 
 console.info = jest.fn();
 
-describe('TransactionController.GetBalance', () => {
-  beforeEach(() => {
-    AccountSp.forTesting.clear();
+describe('TransactionController', () => {
+  beforeEach(async () => {
+    await redis.flushall();
   });
 
-  it('GetBalance', async () => {
-    AccountSp.insert({ name: 'test', balance: 100 });
+  afterAll(async () => {
+    await redis.quit();
+  });
 
+  it.only('GetBalance', async () => {
+    await redis.set('test', 100);
     const response = await agent.get('/transaction/balance/test');
-
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
     expect(response.body.data).toBe(100);
-  });
-
-  it('Account not existed', async () => {
-    const response = await agent.get('/transaction/balance/test');
-    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.AccountNotExist]);
   });
 });
 

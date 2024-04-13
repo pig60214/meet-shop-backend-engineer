@@ -1,8 +1,12 @@
 /* eslint-disable class-methods-use-this */
 import ITransferTransactionRequest from '../controllers/ITransferTransactionRequest';
+import ApiResponse from '../models/ApiResponse';
+import ApiResponseError from '../models/ApiResponseError';
 import IApiResponse from '../models/IApiResponse';
 import ITransactionRequest from '../models/ITransactionRequest';
 import ITransactionResult from '../models/ITransactionResult';
+import EnumResponseStatus from '../models/enums/EnumResponseStatus';
+import redis from '../redis';
 import TransactionRepository from '../repositories/TransactionRepository';
 import LogService from './LogService';
 
@@ -17,8 +21,11 @@ export default class TransactionService {
   }
 
   async getBalance(name: string): Promise<IApiResponse<number>> {
-    const response = await this.transactionRepository.getBalance(name);
-    return response;
+    const balanceStr = await redis.get(name);
+    if (balanceStr) {
+      return new ApiResponse(Number(balanceStr));
+    }
+    return new ApiResponseError(EnumResponseStatus.AccountNotExist);
   }
 
   async deposit(transaction: ITransactionRequest): Promise<IApiResponse<ITransactionResult>> {
