@@ -1,0 +1,5 @@
+{
+  "exec": "npm run swagger",
+  "watch": ["src/models", "src/**/*Controller.ts"],
+  "ext": "ts"
+}

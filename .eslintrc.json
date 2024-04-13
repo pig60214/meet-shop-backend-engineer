@@ -1,0 +1,19 @@
+{
+    "env": {
+        "browser": true,
+        "es2021": true
+    },
+    "extends": [
+      "airbnb-base",
+      "airbnb-typescript/base"
+    ],
+    "parserOptions": {
+        "project": "./tsconfig.json"
+    },
+    "rules": {
+      "max-len": ["error", 150],
+      "no-console": ["error", { "allow": ["error", "info"] }],
+      "@typescript-eslint/indent": ["error", 2, { "ignoredNodes": ["PropertyDefinition"], "SwitchCase": 1 }],
+      "arrow-parens": "off"
+    }
+}
