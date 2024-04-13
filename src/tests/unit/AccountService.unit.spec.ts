@@ -25,7 +25,7 @@ describe('AccountService.Create', () => {
     expect(mockGet).toHaveBeenCalledTimes(1);
     expect(mockGet).toHaveBeenCalledWith('test');
     expect(mockSet).toHaveBeenCalledTimes(1);
-    expect(mockSet).toHaveBeenCalledWith('test', 0);
+    expect(mockSet).toHaveBeenCalledWith('test', JSON.stringify(account));
     expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
   });
 

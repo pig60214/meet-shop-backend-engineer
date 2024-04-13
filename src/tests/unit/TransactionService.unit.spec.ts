@@ -36,7 +36,7 @@ describe('TransactionService.GetBalance', () => {
   const transactionService = new TransactionService();
 
   it('Success', async () => {
-    mockGet.mockResolvedValue('100');
+    mockGet.mockResolvedValue('{\"name\":\"test\",\"balance\":100}');
     const response = await transactionService.getBalance('test');
     expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
     expect(response.data).toBe(100);
@@ -53,13 +53,13 @@ describe('TransactionService.Deposit', () => {
   const transactionService = new TransactionService();
 
   it('Success', async () => {
-    mockGet.mockResolvedValue('100');
+    mockGet.mockResolvedValue('{\"name\":\"test\",\"balance\":100}');
 
     const transaction = { receiver: 'test', amount: 100 };
     const response = await transactionService.deposit(transaction);
 
     expect(mockSet).toHaveBeenCalledTimes(1);
-    expect(mockSet).toHaveBeenCalledWith('test', 200);
+    expect(mockSet).toHaveBeenCalledWith('test', '{\"name\":\"test\",\"balance\":200}');
     expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
     expect(response.data).toEqual({ beforeBalance: 100, afterBalance: 200 });
   });

@@ -11,7 +11,7 @@ export default class AccountService {
     const account = await redis.get(request.name);
 
     if (!account) {
-      await redis.set(request.name, request.balance);
+      await redis.set(request.name, JSON.stringify(request));
       return new ApiResponse();
     }
 

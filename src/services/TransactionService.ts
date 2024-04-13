@@ -2,6 +2,7 @@
 import ITransferTransactionRequest from '../controllers/ITransferTransactionRequest';
 import ApiResponse from '../models/ApiResponse';
 import ApiResponseError from '../models/ApiResponseError';
+import IAccount from '../models/IAccount';
 import IApiResponse from '../models/IApiResponse';
 import ITransactionRequest from '../models/ITransactionRequest';
 import ITransactionResult from '../models/ITransactionResult';
@@ -20,21 +21,26 @@ export default class TransactionService {
     this.logService = logService ?? new LogService();
   }
 
+  private async getAccount(name: string): Promise<IAccount | undefined> {
+    const accountStr = await redis.get(name);
+    return accountStr ? JSON.parse(accountStr) : undefined;
+  }
+
   async getBalance(name: string): Promise<IApiResponse<number>> {
-    const balanceStr = await redis.get(name);
-    if (balanceStr) {
-      return new ApiResponse(Number(balanceStr));
+    const account = await this.getAccount(name);
+    if (account) {
+      return new ApiResponse(account.balance);
     }
     return new ApiResponseError(EnumResponseStatus.AccountNotExist);
   }
 
   async deposit(transaction: ITransactionRequest): Promise<IApiResponse<ITransactionResult>> {
-    const balanceStr = await redis.get(transaction.receiver);
-    if (balanceStr) {
-      const beforeBalance = Number(balanceStr);
-      const afterBalance = beforeBalance + transaction.amount;
-      await redis.set(transaction.receiver, afterBalance);
-      return new ApiResponse({ beforeBalance, afterBalance });
+    const account = await this.getAccount(transaction.receiver);
+    if (account) {
+      const beforeBalance = account.balance;
+      account.balance += transaction.amount;
+      await redis.set(transaction.receiver, JSON.stringify(account));
+      return new ApiResponse({ beforeBalance, afterBalance: account.balance });
     }
     return new ApiResponseError(EnumResponseStatus.AccountNotExist);
   }
