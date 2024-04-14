@@ -3,8 +3,8 @@ import ITransaction from '../models/ITransaction';
 import redis from '../redis';
 
 export default class TransactionRepository {
-  async set(transcation: ITransaction): Promise<void> {
-    await redis.set(`T${transcation.when.getTime()}`, JSON.stringify(transcation));
+  async set(transaction: ITransaction): Promise<void> {
+    await redis.set(`T${transaction.when.getTime()}`, JSON.stringify(transaction));
   }
 
   async get(name: string): Promise<ITransaction | undefined> {

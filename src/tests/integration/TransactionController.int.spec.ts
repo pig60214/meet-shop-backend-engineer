@@ -120,4 +120,21 @@ describe('TransactionController.Transfer', () => {
 
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
   });
+
+  it('Save Transaction', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2024, 4, 11));
+
+    await agent.post('/account/create').send({ name: 'giver', balance: 100 });
+    await agent.post('/account/create').send({ name: 'receiver', balance: 200 });
+
+    const transaction: ITransferTransactionRequest = { giver: 'giver', receiver: 'receiver', amount: 40 };
+    await agent.post('/transaction/transfer').send(transaction);
+
+    const received = { when: new Date(), ...transaction };
+    const expected = await redis.get(`T${(new Date().getTime())}`);
+    expect(JSON.stringify(received)).toEqual(expected);
+
+    jest.useRealTimers();
+  });
 });

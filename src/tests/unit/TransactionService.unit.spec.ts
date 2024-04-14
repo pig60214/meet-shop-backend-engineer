@@ -3,6 +3,8 @@ import TransactionService from '../../services/TransactionService';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
 import redis from '../../redis';
 import AccountRepository from '../../repositories/AccountRepository';
+import TransactionRepository from '../../repositories/TransactionRepository';
+import ITransaction from '../../models/ITransaction';
 
 console.info = jest.fn();
 
@@ -140,7 +142,24 @@ describe('TransactionService.Transfer', () => {
     expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.BalanceNotEnough]);
   });
 
-  it.skip('Save Transaction', async () => {
-    expect(true).toBe(false);
+  it('Save Transaction', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2024, 4, 11));
+
+    const transactionRepository = new TransactionRepository();
+    const services = new TransactionService(acountRepository, transactionRepository);
+    const mockSetTransaction = jest.spyOn(transactionRepository, 'set');
+
+    when(mockGet).calledWith('giver').mockResolvedValue({ name: 'giver', balance: 100 });
+    when(mockGet).calledWith('receiver').mockResolvedValue({ name: 'receiver', balance: 100 });
+
+    const transaction = { giver: 'giver', receiver: 'receiver', amount: 100 };
+    await services.transfer(transaction);
+
+    const transactionLog: ITransaction = { when: new Date(), ...transaction };
+    expect(mockSetTransaction).toHaveBeenCalledTimes(1);
+    expect(mockSetTransaction).toHaveBeenCalledWith(transactionLog);
+
+    jest.useRealTimers();
   });
 });

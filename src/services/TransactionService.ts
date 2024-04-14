@@ -73,6 +73,7 @@ export default class TransactionService {
 
     await this.accountRepository.set(giver);
     await this.accountRepository.set(receiver);
+    await this.transactionRepository.set({ when: new Date(), ...transaction });
 
     return new ApiResponse({ beforeBalance, afterBalance: giver.balance });
   }
