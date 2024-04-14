@@ -3,8 +3,6 @@ import TransactionService from '../../services/TransactionService';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
 import redis from '../../redis';
 import AccountRepository from '../../repositories/AccountRepository';
-import TransactionRepository from '../../repositories/TransactionRepository';
-import ITransaction from '../../models/ITransaction';
 
 console.info = jest.fn();
 
@@ -96,17 +94,24 @@ describe('TransactionService.Withdraw', () => {
 
 describe('TransactionService.Transfer', () => {
   it('Success', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2024, 4, 11));
     when(mockGet).calledWith('giver').mockResolvedValue({ name: 'giver', balance: 100 });
     when(mockGet).calledWith('receiver').mockResolvedValue({ name: 'receiver', balance: 100 });
+    const mockTransaction = jest.spyOn(acountRepository, 'transaction');
 
     const transaction = { giver: 'giver', receiver: 'receiver', amount: 100 };
     const response = await transactionService.transfer(transaction);
 
-    expect(mockSet).toHaveBeenCalledTimes(2);
-    expect(mockSet).toHaveBeenCalledWith({ name: 'giver', balance: 0 });
-    expect(mockSet).toHaveBeenCalledWith({ name: 'receiver', balance: 200 });
+    expect(mockTransaction).toHaveBeenCalledTimes(1);
+    expect(mockTransaction).toHaveBeenCalledWith(
+      { name: 'giver', balance: 0 },
+      { name: 'receiver', balance: 200 },
+      { when: new Date(), ...transaction },
+    );
     expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
     expect(response.data).toEqual({ beforeBalance: 100, afterBalance: 0 });
+    jest.useRealTimers();
   });
 
   it('AccountNotExist', async () => {
@@ -140,26 +145,5 @@ describe('TransactionService.Transfer', () => {
 
     expect(mockSet).toHaveBeenCalledTimes(0);
     expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.BalanceNotEnough]);
-  });
-
-  it('Save Transaction', async () => {
-    jest.useFakeTimers();
-    jest.setSystemTime(new Date(2024, 4, 11));
-
-    const transactionRepository = new TransactionRepository();
-    const services = new TransactionService(acountRepository, transactionRepository);
-    const mockSetTransaction = jest.spyOn(transactionRepository, 'set');
-
-    when(mockGet).calledWith('giver').mockResolvedValue({ name: 'giver', balance: 100 });
-    when(mockGet).calledWith('receiver').mockResolvedValue({ name: 'receiver', balance: 100 });
-
-    const transaction = { giver: 'giver', receiver: 'receiver', amount: 100 };
-    await services.transfer(transaction);
-
-    const transactionLog: ITransaction = { when: new Date(), ...transaction };
-    expect(mockSetTransaction).toHaveBeenCalledTimes(1);
-    expect(mockSetTransaction).toHaveBeenCalledWith(transactionLog);
-
-    jest.useRealTimers();
   });
 });

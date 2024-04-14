@@ -7,16 +7,12 @@ import ITransactionRequest from '../models/ITransactionRequest';
 import ITransactionResult from '../models/ITransactionResult';
 import EnumResponseStatus from '../models/enums/EnumResponseStatus';
 import AccountRepository from '../repositories/AccountRepository';
-import TransactionRepository from '../repositories/TransactionRepository';
 
 export default class TransactionService {
   private accountRepository: AccountRepository;
 
-  private transactionRepository: TransactionRepository;
-
-  constructor(accountRepository?: AccountRepository, transactionRepository?: TransactionRepository) {
+  constructor(accountRepository?: AccountRepository) {
     this.accountRepository = accountRepository ?? new AccountRepository();
-    this.transactionRepository = transactionRepository ?? new TransactionRepository();
   }
 
   async getBalance(name: string): Promise<IApiResponse<number>> {
@@ -71,9 +67,7 @@ export default class TransactionService {
     giver.balance -= transaction.amount;
     receiver.balance += transaction.amount;
 
-    await this.accountRepository.set(giver);
-    await this.accountRepository.set(receiver);
-    await this.transactionRepository.set({ when: new Date(), ...transaction });
+    await this.accountRepository.transaction(giver, receiver, { when: new Date(), ...transaction });
 
     return new ApiResponse({ beforeBalance, afterBalance: giver.balance });
   }
