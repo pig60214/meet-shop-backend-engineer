@@ -1,7 +1,6 @@
 import request, { Response } from 'supertest';
 import app from '../../app';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
-import AccountSp from '../../data/accounts';
 import redis from '../../redis';
 
 const agent = request(app);
@@ -15,10 +14,6 @@ afterAll(async () => {
 });
 
 describe('Lock', () => {
-  beforeEach(() => {
-    AccountSp.forTesting.clear();
-  });
-
   it('Correct Order', async () => {
     await agent.post('/account/create').send({ name: 'giver', balance: 100 });
     await agent.post('/account/create').send({ name: 'receiver', balance: 200 });
