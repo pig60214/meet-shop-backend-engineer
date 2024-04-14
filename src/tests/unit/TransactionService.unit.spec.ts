@@ -1,28 +1,14 @@
-import TransactionRepository from '../../repositories/TransactionRepository';
 import TransactionService from '../../services/TransactionService';
-import ITransactionRequest from '../../models/ITransactionRequest';
-import ITransactionResult from '../../models/ITransactionResult';
-import IApiResponse from '../../models/IApiResponse';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
-import ITransferTransactionRequest from '../../controllers/ITransferTransactionRequest';
-import LogService from '../../services/LogService';
 import redis from '../../redis';
-
-const responseFromRepo: IApiResponse<ITransactionResult> = {
-  status: {
-    code: EnumResponseStatus.Success,
-    message: EnumResponseStatus[EnumResponseStatus.Success],
-  },
-  data: {
-    beforeBalance: 0,
-    afterBalance: 200,
-  },
-};
+import { when } from 'jest-when';
 
 console.info = jest.fn();
 
 const mockGet = jest.spyOn(redis, 'get');
 const mockSet = jest.spyOn(redis, 'set');
+
+const transactionService = new TransactionService();
 
 afterAll(async () => {
   await redis.quit();
@@ -33,8 +19,6 @@ afterEach(() => {
 });
 
 describe('TransactionService.GetBalance', () => {
-  const transactionService = new TransactionService();
-
   it('Success', async () => {
     mockGet.mockResolvedValue('{\"name\":\"test\",\"balance\":100}');
     const response = await transactionService.getBalance('test');
@@ -50,8 +34,6 @@ describe('TransactionService.GetBalance', () => {
 });
 
 describe('TransactionService.Deposit', () => {
-  const transactionService = new TransactionService();
-
   it('Success', async () => {
     mockGet.mockResolvedValue('{\"name\":\"test\",\"balance\":100}');
 
@@ -76,8 +58,6 @@ describe('TransactionService.Deposit', () => {
 });
 
 describe('TransactionService.Withdraw', () => {
-  const transactionService = new TransactionService();
-
   it('Success', async () => {
     mockGet.mockResolvedValue('{\"name\":\"test\",\"balance\":100}');
 
@@ -111,46 +91,56 @@ describe('TransactionService.Withdraw', () => {
   });
 });
 
-describe.skip('TransactionService', () => {
-  let transactionRepository: TransactionRepository;
-  let transactionService: TransactionService;
+describe('TransactionService.Transfer', () => {
+  it('Success', async () => {
+    when(mockGet).calledWith('giver').mockResolvedValue('{\"name\":\"giver\",\"balance\":100}');
+    when(mockGet).calledWith('receiver').mockResolvedValue('{\"name\":\"receiver\",\"balance\":100}');
 
-  beforeEach(() => {
-    transactionRepository = new TransactionRepository();
-    transactionService = new TransactionService(transactionRepository);
-  });
-
-  it('Transfer: call TransactionRepository.transfer() and return the result from it', async () => {
-    const mockRepoTransfer = jest.spyOn(transactionRepository, 'transfer').mockResolvedValue(responseFromRepo);
-
-    const transaction: ITransferTransactionRequest = {
-      giver: 'test1',
-      receiver: 'test',
-      amount: 100,
-    };
+    const transaction = { giver: 'giver', receiver: 'receiver', amount: 100 };
     const response = await transactionService.transfer(transaction);
 
-    expect(mockRepoTransfer).toHaveBeenCalledTimes(1);
-    expect(mockRepoTransfer).toHaveBeenCalledWith(transaction);
-    expect(response).toEqual(responseFromRepo);
+    expect(mockSet).toHaveBeenCalledTimes(2);
+    expect(mockSet).toHaveBeenCalledWith('giver', '{\"name\":\"giver\",\"balance\":0}')
+    expect(mockSet).toHaveBeenCalledWith('receiver', '{\"name\":\"receiver\",\"balance\":200}')
+    expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
+    expect(response.data).toEqual({ beforeBalance: 100, afterBalance: 0 });
   });
 
-  it('Transfer: log request and response', async () => {
-    const logService = new LogService();
-    transactionService = new TransactionService(transactionRepository, logService);
+  it('AccountNotExist', async () => {
+    when(mockGet).calledWith('giver').mockResolvedValue(null);
+    when(mockGet).calledWith('receiver').mockResolvedValue('{\"name\":\"receiver\",\"balance\":100}');
 
-    transactionRepository.transfer = jest.fn().mockResolvedValue(responseFromRepo);
-    const mockLog = jest.spyOn(logService, 'log').mockImplementation(jest.fn());
+    const transaction = { giver: 'giver', receiver: 'receiver', amount: 100 };
+    const response = await transactionService.transfer(transaction);
 
-    const request: ITransferTransactionRequest = {
-      giver: 'test1',
-      receiver: 'test',
-      amount: 100,
-    };
-    const response = await transactionService.transfer(request);
-
-    expect(mockLog).toHaveBeenCalledTimes(2);
-    expect(mockLog).toHaveBeenNthCalledWith(1, `TransactionService.transfer() Request: ${JSON.stringify(request)}`);
-    expect(mockLog).toHaveBeenNthCalledWith(2, `TransactionService.transfer() Response: ${JSON.stringify(response)}`);
+    expect(mockSet).toHaveBeenCalledTimes(0);
+    expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.AccountNotExist]);
   });
+
+  it('ReceiverNotExist', async () => {
+    when(mockGet).calledWith('giver').mockResolvedValue('{\"name\":\"giver\",\"balance\":100}');
+    when(mockGet).calledWith('receiver').mockResolvedValue(null);
+
+    const transaction = { giver: 'giver', receiver: 'receiver', amount: 100 };
+    const response = await transactionService.transfer(transaction);
+
+    expect(mockSet).toHaveBeenCalledTimes(0);
+    expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ReceiverNotExist]);
+  });
+
+  it('BalanceNotEnough', async () => {
+    when(mockGet).calledWith('giver').mockResolvedValue('{\"name\":\"giver\",\"balance\":100}');
+    when(mockGet).calledWith('receiver').mockResolvedValue('{\"name\":\"receiver\",\"balance\":100}');
+
+    const transaction = { giver: 'giver', receiver: 'receiver', amount: 200 };
+    const response = await transactionService.transfer(transaction);
+
+    expect(mockSet).toHaveBeenCalledTimes(0);
+    expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.BalanceNotEnough]);
+  });
+
+  it.skip('Save Transaction', async () => {
+    expect(true).toBe(false);
+  });
+
 });

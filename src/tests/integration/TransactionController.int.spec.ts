@@ -3,8 +3,6 @@ import app from '../../app';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
 import ITransactionRequest from '../../models/ITransactionRequest';
 import ITransferTransactionRequest from '../../controllers/ITransferTransactionRequest';
-import TransactionSp from '../../data/transactions';
-import AccountSp from '../../data/accounts';
 import redis from '../../redis';
 
 const agent = request(app);
@@ -78,15 +76,10 @@ describe('TransactionController.Withdraw', () => {
   });
 });
 
-describe.skip('TransactionController.Transfer', () => {
-  beforeEach(() => {
-    AccountSp.forTesting.clear();
-    TransactionSp.forTesting.clear();
-  });
-
-  it('Transfer', async () => {
-    AccountSp.insert({ name: 'giver', balance: 100 });
-    AccountSp.insert({ name: 'receiver', balance: 200 });
+describe('TransactionController.Transfer', () => {
+  it('Success', async () => {
+    await redis.set('giver', '{\"name\":\"giver\",\"balance\":100}');
+    await redis.set('receiver', '{\"name\":\"receiver\",\"balance\":200}');
 
     const transaction: ITransferTransactionRequest = { giver: 'giver', receiver: 'receiver', amount: 40 };
     const response = await agent.post('/transaction/transfer').send(transaction);
@@ -108,8 +101,6 @@ describe.skip('TransactionController.Transfer', () => {
   });
 
   it('ValidationFailed: giver === receiver', async () => {
-    AccountSp.insert({ name: 'giver', balance: 100 });
-
     const transaction: ITransferTransactionRequest = { giver: 'giver', receiver: 'giver', amount: 40 };
     const response = await agent.post('/transaction/transfer').send(transaction);
 
@@ -128,53 +119,5 @@ describe.skip('TransactionController.Transfer', () => {
     const response = await agent.post('/transaction/transfer').send(transaction);
 
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
-  });
-
-  it('Giver not existed and the balance of receiver should be the same', async () => {
-    AccountSp.insert({ name: 'receiver', balance: 200 });
-
-    const transaction: ITransferTransactionRequest = { giver: 'giver', receiver: 'receiver', amount: 40 };
-    const response = await agent.post('/transaction/transfer').send(transaction);
-    const receiverBalance = await agent.get('/transaction/balance/receiver');
-
-    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.AccountNotExist]);
-    expect(receiverBalance.body.data).toBe(200);
-  });
-
-  it('Receiver not existed and the balance of giver should be the same', async () => {
-    AccountSp.insert({ name: 'giver', balance: 100 });
-
-    const transaction: ITransferTransactionRequest = { giver: 'giver', receiver: 'receiver', amount: 40 };
-    const response = await agent.post('/transaction/transfer').send(transaction);
-
-    const giverBalanceResponse = await agent.get('/transaction/balance/giver');
-
-    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ReceiverNotExist]);
-    expect(giverBalanceResponse.body.data).toBe(100);
-  });
-
-  it('Transfering over the balance of the giver should get BalanceNotEnough. Balances of giver and receiver are the same', async () => {
-    AccountSp.insert({ name: 'giver', balance: 100 });
-    AccountSp.insert({ name: 'receiver', balance: 200 });
-
-    const transferOverBalance: ITransferTransactionRequest = { giver: 'giver', receiver: 'receiver', amount: 150 };
-    const response = await agent.post('/transaction/transfer').send(transferOverBalance);
-    const giverBalance = await agent.get('/transaction/balance/giver');
-    const receiverBalance = await agent.get('/transaction/balance/receiver');
-
-    expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.BalanceNotEnough]);
-    expect(giverBalance.body.data).toBe(100);
-    expect(receiverBalance.body.data).toBe(200);
-  });
-
-  it('Save transaction log', async () => {
-    AccountSp.insert({ name: 'giver', balance: 100 });
-    AccountSp.insert({ name: 'receiver', balance: 200 });
-
-    const transfer: ITransferTransactionRequest = { giver: 'giver', receiver: 'receiver', amount: 40 };
-    await agent.post('/transaction/transfer').send(transfer);
-
-    const result = TransactionSp.forTesting.findTransaction(transfer);
-    expect(result).not.toBe(undefined);
   });
 });

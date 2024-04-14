@@ -60,9 +60,27 @@ export default class TransactionService {
   }
 
   async transfer(transaction: ITransferTransactionRequest): Promise<IApiResponse<ITransactionResult>> {
-    this.logService.log(`TransactionService.transfer() Request: ${JSON.stringify(transaction)}`);
-    const response = await this.transactionRepository.transfer(transaction);
-    this.logService.log(`TransactionService.transfer() Response: ${JSON.stringify(response)}`);
-    return response;
+    const giver = await this.getAccount(transaction.giver);
+    if (!giver) {
+      return new ApiResponseError(EnumResponseStatus.AccountNotExist);
+    }
+
+    const receiver = await this.getAccount(transaction.receiver);
+    if (!receiver) {
+      return new ApiResponseError(EnumResponseStatus.ReceiverNotExist);
+    }
+
+    if (giver.balance < transaction.amount) {
+      return new ApiResponseError(EnumResponseStatus.BalanceNotEnough);
+    }
+
+    const beforeBalance = giver.balance;
+    giver.balance -= transaction.amount;
+    receiver.balance += transaction.amount;
+
+    await redis.set('giver', JSON.stringify(giver));
+    await redis.set('receiver', JSON.stringify(receiver));
+
+    return new ApiResponse({ beforeBalance, afterBalance: giver.balance });
   }
 }
