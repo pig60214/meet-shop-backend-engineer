@@ -1,0 +1,10 @@
+services:
+  test_server:
+    image: meet-shop-backend-engineer-server
+    environment:
+      NODE_ENV: test.docker
+    depends_on:
+      test_redis_service:
+        condition: service_started
+  test_redis_service:
+    image: redis

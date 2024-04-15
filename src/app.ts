@@ -31,7 +31,7 @@ app.get('/api-docs', swaggerUi.setup(swaggerDocument));
 app.get('/set/:key/:value', async (req, res) => {
   const { key, value } = req.params;
   await redis.set(key, value);
-  redis.get(key, (err, result) => {
+  redis.get(key, (err: Error | null | undefined, result: string | null | undefined) => {
     if (err) {
       console.error(err);
     } else {

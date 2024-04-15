@@ -4,6 +4,5 @@ module.exports = {
   coveragePathIgnorePatterns: [
     '/src/routes'
   ],
-  setupFiles: ['./jest.env-setup.ts'],
   maxWorkers: 1,
 };
