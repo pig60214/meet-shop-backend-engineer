@@ -9,7 +9,7 @@ export default class Lock {
     this.eventEmitter.setMaxListeners(0);
   }
 
-  async acquire(key: string) {
+  private async acquireKey(key: string) {
     return new Promise<void>((resolve) => {
       if (!this.locked[key]) {
         this.locked[key] = true;
@@ -29,8 +29,27 @@ export default class Lock {
     });
   }
 
-  release(key: string) {
+  private releaseKey(key: string) {
     delete this.locked[key];
     setImmediate(() => this.eventEmitter.emit(key));
+  }
+
+  async acquire(key: string | string[]) {
+    if (typeof key === 'string') {
+      await this.acquireKey(key);
+    } else {
+      const promises = key.map(k => this.acquireKey(k));
+      await Promise.all(promises);
+    }
+  }
+
+  release(key: string | string[]) {
+    if (typeof key === 'string') {
+      this.releaseKey(key);
+    } else {
+      key.forEach(k => {
+        this.releaseKey(k);
+      });
+    }
   }
 }
