@@ -4,6 +4,8 @@ import app from '../../app';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
 import redis from '../../redis';
 
+jest.mock('../../utils/logger');
+
 const agent = request(app);
 
 beforeEach(async () => {

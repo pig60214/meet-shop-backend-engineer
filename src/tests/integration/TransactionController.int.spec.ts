@@ -5,9 +5,9 @@ import ITransactionRequest from '../../models/ITransactionRequest';
 import ITransferTransactionRequest from '../../controllers/ITransferTransactionRequest';
 import redis from '../../redis';
 
-const agent = request(app);
+jest.mock('../../utils/logger');
 
-console.info = jest.fn();
+const agent = request(app);
 
 beforeEach(async () => {
   await redis.flushall();

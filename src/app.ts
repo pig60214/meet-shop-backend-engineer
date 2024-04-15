@@ -7,15 +7,19 @@ import express, {
 } from 'express';
 import swaggerUi from 'swagger-ui-express';
 import { ValidateError } from 'tsoa';
+import httpContext from 'express-http-context';
 import { RegisterRoutes } from './routes/routes';
 import swaggerDocument from './routes/swagger.json';
 import ApiResponseError from './models/ApiResponseError';
 import EnumResponseStatus from './models/enums/EnumResponseStatus';
 import redis from './redis';
+import logger from './utils/logger';
+import logMiddleware from './controllers/middlewares/logMiddleware';
 
 const app: Express = express();
 app.use(express.json());
-
+app.use(httpContext.middleware);
+app.use(logMiddleware);
 const router = Router();
 RegisterRoutes(router);
 
@@ -59,7 +63,7 @@ app.use((
     return res.json(response);
   }
 
-  console.error(new Date(), err);
+  logger.error(err);
   return res.status(500).json();
 
   next();
