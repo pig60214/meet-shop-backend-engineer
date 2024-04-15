@@ -12,7 +12,6 @@ import { RegisterRoutes } from './routes/routes';
 import swaggerDocument from './routes/swagger.json';
 import ApiResponseError from './models/ApiResponseError';
 import EnumResponseStatus from './models/enums/EnumResponseStatus';
-import redis from './redis';
 import logger from './utils/logger';
 import logMiddleware from './controllers/middlewares/logMiddleware';
 
@@ -27,29 +26,6 @@ app.use('/', router);
 
 app.use('/api-docs', swaggerUi.serve);
 app.get('/api-docs', swaggerUi.setup(swaggerDocument));
-
-app.get('/set/:key/:value', async (req, res) => {
-  const { key, value } = req.params;
-  await redis.set(key, value);
-  redis.get(key, (err: Error | null | undefined, result: string | null | undefined) => {
-    if (err) {
-      console.error(err);
-    } else {
-      res.send(result);
-    }
-  });
-});
-
-app.get('/get/:key', async (req, res) => {
-  const { key } = req.params;
-  try {
-    const result = await redis.get(key);
-    res.send(result ?? 'not found');
-  } catch (error) {
-    console.error(error);
-    res.send(error);
-  }
-});
 
 app.use((
   err: Error,
