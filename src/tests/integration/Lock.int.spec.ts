@@ -33,7 +33,7 @@ describe('Lock', () => {
     await Promise.all(promises);
 
     expect(response1.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
-    expect(response1.body.data.afterBalance).toBe(0);
+    expect(response1.body.data.giver.afterBalance).toBe(0);
 
     expect(response2.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.BalanceNotEnough]);
 

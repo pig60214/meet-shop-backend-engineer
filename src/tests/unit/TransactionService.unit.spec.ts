@@ -110,7 +110,10 @@ describe('TransactionService.Transfer', () => {
       { when: new Date(), ...transaction },
     );
     expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
-    expect(response.data).toEqual({ beforeBalance: 100, afterBalance: 0 });
+    expect(response.data).toEqual({
+      giver: { beforeBalance: 100, afterBalance: 0 },
+      receiver: { beforeBalance: 100, afterBalance: 200 },
+    });
     jest.useRealTimers();
   });
 

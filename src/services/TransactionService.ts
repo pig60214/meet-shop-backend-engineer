@@ -6,6 +6,7 @@ import ApiResponseError from '../models/ApiResponseError';
 import IApiResponse from '../models/IApiResponse';
 import IDepositRequest from '../models/IDepositRequest';
 import ITransactionResult from '../models/ITransactionResult';
+import { ITransferResult } from '../models/ITransferResult';
 import { IWithdrawRequest } from '../models/IWithdrawRequest';
 import EnumResponseStatus from '../models/enums/EnumResponseStatus';
 import AccountRepository from '../repositories/AccountRepository';
@@ -66,7 +67,7 @@ export default class TransactionService {
     }
   }
 
-  async transfer(transaction: ITransferRequest): Promise<IApiResponse<ITransactionResult>> {
+  async transfer(transaction: ITransferRequest): Promise<IApiResponse<ITransferResult>> {
     await TransactionService.mutex.acquire([transaction.giver, transaction.receiver]);
     try {
       const giver = await this.accountRepository.get(transaction.giver);
@@ -83,13 +84,17 @@ export default class TransactionService {
         return new ApiResponseError(EnumResponseStatus.BalanceNotEnough);
       }
 
-      const beforeBalance = giver.balance;
+      const giverBeforeBalance = giver.balance;
+      const receiverBeforeBalance = receiver.balance;
       giver.balance -= transaction.amount;
       receiver.balance += transaction.amount;
 
       await this.accountRepository.transaction(giver, receiver, { when: new Date(), ...transaction });
 
-      return new ApiResponse({ beforeBalance, afterBalance: giver.balance });
+      return new ApiResponse({
+        giver: { beforeBalance: giverBeforeBalance, afterBalance: giver.balance },
+        receiver: { beforeBalance: receiverBeforeBalance, afterBalance: receiver.balance },
+      });
     } catch (error) {
       throw error;
     } finally {

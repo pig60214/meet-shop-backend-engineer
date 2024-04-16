@@ -87,7 +87,10 @@ describe('TransactionController.Transfer', () => {
     const receiverBalance = await agent.get('/transaction/balance/receiver');
 
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
-    expect(response.body.data.afterBalance).toBe(60);
+    expect(response.body.data).toEqual({
+      giver: { beforeBalance: 100, afterBalance: 60 },
+      receiver: { beforeBalance: 200, afterBalance: 240 },
+    });
     expect(giverBalance.body.data).toBe(60);
     expect(receiverBalance.body.data).toBe(240);
   });

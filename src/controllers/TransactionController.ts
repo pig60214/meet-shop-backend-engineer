@@ -11,6 +11,7 @@ import ITransferRequest from './ITransferRequest';
 import ApiResponseError from '../models/ApiResponseError';
 import EnumResponseStatus from '../models/enums/EnumResponseStatus';
 import { IWithdrawRequest } from '../models/IWithdrawRequest';
+import { ITransferResult } from '../models/ITransferResult';
 
 @Route('transaction')
 @Tags('Transaction')
@@ -52,7 +53,7 @@ export class TransactionController extends Controller {
    * @summary Transfer from one account to another account
    */
   @Post('/transfer')
-  public async transfer(@Body() transaction: ITransferRequest): Promise<IApiResponse<ITransactionResult>> {
+  public async transfer(@Body() transaction: ITransferRequest): Promise<IApiResponse<ITransferResult>> {
     if (transaction.giver === transaction.receiver) {
       const response = new ApiResponseError(EnumResponseStatus.ValidationFailed);
       response.status.detail = 'giver and receiver should be different';
