@@ -1,8 +1,8 @@
 import request from 'supertest';
 import app from '../../app';
 import EnumResponseStatus from '../../models/enums/EnumResponseStatus';
-import ITransactionRequest from '../../models/ITransactionRequest';
-import ITransferTransactionRequest from '../../controllers/ITransferTransactionRequest';
+import IDepositRequest from '../../models/IDepositRequest';
+import ITransferRequest from '../../controllers/ITransferRequest';
 import redis from '../../redis';
 
 jest.mock('../../utils/logger');
@@ -30,7 +30,7 @@ describe('TransactionController.Deposit', () => {
   it('Success', async () => {
     await agent.post('/account/create').send({ name: 'test', balance: 100 });
 
-    const transaction: ITransactionRequest = { receiver: 'test', amount: 100 };
+    const transaction: IDepositRequest = { account: 'test', amount: 100 };
     const response = await agent.post('/transaction/deposit').send(transaction);
 
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.Success]);
@@ -38,13 +38,13 @@ describe('TransactionController.Deposit', () => {
   });
 
   it('ValidationFailed: amount minimum is 1', async () => {
-    const transaction: ITransactionRequest = { receiver: 'test', amount: 0 };
+    const transaction: IDepositRequest = { account: 'test', amount: 0 };
     const response = await agent.post('/transaction/deposit').send(transaction);
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
   });
 
   it('ValidationFailed: receiver sholud not be empty string', async () => {
-    const transaction: ITransactionRequest = { receiver: '', amount: 100 };
+    const transaction: IDepositRequest = { account: '', amount: 100 };
     const response = await agent.post('/transaction/deposit').send(transaction);
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
   });
@@ -54,7 +54,7 @@ describe('TransactionController.Withdraw', () => {
   it('Success', async () => {
     await agent.post('/account/create').send({ name: 'test', balance: 100 });
 
-    const transaction = { receiver: 'test', amount: 100 };
+    const transaction = { account: 'test', amount: 100 };
     const response = await agent.post('/transaction/withdraw').send(transaction);
     const balance = await agent.get('/transaction/balance/test');
 
@@ -64,13 +64,13 @@ describe('TransactionController.Withdraw', () => {
   });
 
   it('ValidationFailed: amount minimum is 1', async () => {
-    const transaction: ITransactionRequest = { receiver: 'test', amount: 0 };
+    const transaction: IDepositRequest = { account: 'test', amount: 0 };
     const response = await agent.post('/transaction/withdraw').send(transaction);
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
   });
 
   it('ValidationFailed: receiver sholud not be empty string', async () => {
-    const transaction: ITransactionRequest = { receiver: '', amount: 100 };
+    const transaction: IDepositRequest = { account: '', amount: 100 };
     const response = await agent.post('/transaction/withdraw').send(transaction);
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
   });
@@ -81,7 +81,7 @@ describe('TransactionController.Transfer', () => {
     await agent.post('/account/create').send({ name: 'giver', balance: 100 });
     await agent.post('/account/create').send({ name: 'receiver', balance: 200 });
 
-    const transaction: ITransferTransactionRequest = { giver: 'giver', receiver: 'receiver', amount: 40 };
+    const transaction: ITransferRequest = { giver: 'giver', receiver: 'receiver', amount: 40 };
     const response = await agent.post('/transaction/transfer').send(transaction);
     const giverBalance = await agent.get('/transaction/balance/giver');
     const receiverBalance = await agent.get('/transaction/balance/receiver');
@@ -93,7 +93,7 @@ describe('TransactionController.Transfer', () => {
   });
 
   it('ValidationFailed: amount < 1.', async () => {
-    const transferZero: ITransferTransactionRequest = { giver: 'giver', receiver: 'receiver', amount: 0 };
+    const transferZero: ITransferRequest = { giver: 'giver', receiver: 'receiver', amount: 0 };
 
     const response = await agent.post('/transaction/transfer').send(transferZero);
 
@@ -101,21 +101,21 @@ describe('TransactionController.Transfer', () => {
   });
 
   it('ValidationFailed: giver === receiver', async () => {
-    const transaction: ITransferTransactionRequest = { giver: 'giver', receiver: 'giver', amount: 40 };
+    const transaction: ITransferRequest = { giver: 'giver', receiver: 'giver', amount: 40 };
     const response = await agent.post('/transaction/transfer').send(transaction);
 
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
   });
 
   it('ValidationFailed: giver = ""', async () => {
-    const transaction: ITransferTransactionRequest = { giver: '', receiver: 'receiver', amount: 40 };
+    const transaction: ITransferRequest = { giver: '', receiver: 'receiver', amount: 40 };
     const response = await agent.post('/transaction/transfer').send(transaction);
 
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
   });
 
   it('ValidationFailed: receiver = ""', async () => {
-    const transaction: ITransferTransactionRequest = { giver: 'giver', receiver: '', amount: 40 };
+    const transaction: ITransferRequest = { giver: 'giver', receiver: '', amount: 40 };
     const response = await agent.post('/transaction/transfer').send(transaction);
 
     expect(response.body.status.message).toBe(EnumResponseStatus[EnumResponseStatus.ValidationFailed]);
@@ -128,7 +128,7 @@ describe('TransactionController.Transfer', () => {
     await agent.post('/account/create').send({ name: 'giver', balance: 100 });
     await agent.post('/account/create').send({ name: 'receiver', balance: 200 });
 
-    const transaction: ITransferTransactionRequest = { giver: 'giver', receiver: 'receiver', amount: 40 };
+    const transaction: ITransferRequest = { giver: 'giver', receiver: 'receiver', amount: 40 };
     await agent.post('/transaction/transfer').send(transaction);
 
     const received = { when: new Date(), ...transaction };

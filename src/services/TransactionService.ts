@@ -1,10 +1,11 @@
 /* eslint-disable class-methods-use-this */
-import ITransferTransactionRequest from '../controllers/ITransferTransactionRequest';
+import ITransferRequest from '../controllers/ITransferRequest';
 import ApiResponse from '../models/ApiResponse';
 import ApiResponseError from '../models/ApiResponseError';
 import IApiResponse from '../models/IApiResponse';
-import ITransactionRequest from '../models/ITransactionRequest';
+import IDepositRequest from '../models/IDepositRequest';
 import ITransactionResult from '../models/ITransactionResult';
+import { IWithdrawRequest } from '../models/IWithdrawRequest';
 import EnumResponseStatus from '../models/enums/EnumResponseStatus';
 import AccountRepository from '../repositories/AccountRepository';
 
@@ -23,8 +24,8 @@ export default class TransactionService {
     return new ApiResponseError(EnumResponseStatus.AccountNotExist);
   }
 
-  async deposit(transaction: ITransactionRequest): Promise<IApiResponse<ITransactionResult>> {
-    const account = await this.accountRepository.get(transaction.receiver);
+  async deposit(transaction: IDepositRequest): Promise<IApiResponse<ITransactionResult>> {
+    const account = await this.accountRepository.get(transaction.account);
     if (account) {
       const beforeBalance = account.balance;
       account.balance += transaction.amount;
@@ -34,8 +35,8 @@ export default class TransactionService {
     return new ApiResponseError(EnumResponseStatus.AccountNotExist);
   }
 
-  async withdraw(transaction: ITransactionRequest): Promise<IApiResponse<ITransactionResult>> {
-    const account = await this.accountRepository.get(transaction.receiver);
+  async withdraw(transaction: IWithdrawRequest): Promise<IApiResponse<ITransactionResult>> {
+    const account = await this.accountRepository.get(transaction.account);
     if (account) {
       if (account.balance >= transaction.amount) {
         const beforeBalance = account.balance;
@@ -48,10 +49,10 @@ export default class TransactionService {
     return new ApiResponseError(EnumResponseStatus.AccountNotExist);
   }
 
-  async transfer(transaction: ITransferTransactionRequest): Promise<IApiResponse<ITransactionResult>> {
+  async transfer(transaction: ITransferRequest): Promise<IApiResponse<ITransactionResult>> {
     const giver = await this.accountRepository.get(transaction.giver);
     if (!giver) {
-      return new ApiResponseError(EnumResponseStatus.AccountNotExist);
+      return new ApiResponseError(EnumResponseStatus.GiverNotExist);
     }
 
     const receiver = await this.accountRepository.get(transaction.receiver);

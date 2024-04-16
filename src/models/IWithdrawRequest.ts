@@ -1,8 +1,8 @@
-export default interface ITransactionRequest {
+export interface IWithdrawRequest {
   /**
    * @minLength 1
    */
-  receiver: string;
+  account: string;
 
   /**
    * @minimum 1

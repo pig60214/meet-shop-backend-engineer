@@ -27,8 +27,8 @@ describe('Lock', () => {
     let response3 = {} as Response;
 
     promises.push(agent.post('/transaction/transfer').send({ giver: 'giver', receiver: 'receiver', amount: 100 }).then(response => { response1 = response; }));
-    promises.push(agent.post('/transaction/withdraw').send({ receiver: 'giver', amount: 100 }).then(response => { response2 = response; }));
-    promises.push(agent.post('/transaction/deposit').send({ receiver: 'receiver', amount: 100 }).then(response => { response3 = response; }));
+    promises.push(agent.post('/transaction/withdraw').send({ account: 'giver', amount: 100 }).then(response => { response2 = response; }));
+    promises.push(agent.post('/transaction/deposit').send({ account: 'receiver', amount: 100 }).then(response => { response3 = response; }));
 
     await Promise.all(promises);
 
@@ -52,7 +52,7 @@ describe('Lock', () => {
     let response2 = {} as Response;
 
     promises.push(agent.post('/transaction/transfer').send({ giver: 'giver', receiver: 'receiver', amount: 100 }).then(response => { response1 = response; }));
-    promises.push(agent.post('/transaction/withdraw').send({ receiver: 'others', amount: 100 }).then(response => { response2 = response; }));
+    promises.push(agent.post('/transaction/withdraw').send({ account: 'others', amount: 100 }).then(response => { response2 = response; }));
 
     await Promise.all(promises);
 

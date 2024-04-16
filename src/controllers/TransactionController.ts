@@ -4,13 +4,14 @@ import {
   Body, Controller, Route, Tags, Post, Path, Get,
 } from 'tsoa';
 import TransactionService from '../services/TransactionService';
-import ITransactionRequest from '../models/ITransactionRequest';
+import IDepositRequest from '../models/IDepositRequest';
 import ITransactionResult from '../models/ITransactionResult';
 import IApiResponse from '../models/IApiResponse';
-import ITransferTransactionRequest from './ITransferTransactionRequest';
+import ITransferRequest from './ITransferRequest';
 import ApiResponseError from '../models/ApiResponseError';
 import EnumResponseStatus from '../models/enums/EnumResponseStatus';
 import Lock from '../classes/Lock';
+import { IWithdrawRequest } from '../models/IWithdrawRequest';
 
 @Route('transaction')
 @Tags('Transaction')
@@ -34,10 +35,10 @@ export class TransactionController extends Controller {
    * @summary Deposit to an account
    */
   @Post('/deposit')
-  public async deposit(@Body() transaction: ITransactionRequest): Promise<IApiResponse<ITransactionResult>> {
-    await TransactionController.mutex.acquire(transaction.receiver);
+  public async deposit(@Body() transaction: IDepositRequest): Promise<IApiResponse<ITransactionResult>> {
+    await TransactionController.mutex.acquire(transaction.account);
     const response = await this.transactionService.deposit(transaction);
-    TransactionController.mutex.release(transaction.receiver);
+    TransactionController.mutex.release(transaction.account);
     return response;
   }
 
@@ -46,10 +47,10 @@ export class TransactionController extends Controller {
    * @summary Withdraw from an account
    */
   @Post('/withdraw')
-  public async withdraw(@Body() transaction: ITransactionRequest): Promise<IApiResponse<ITransactionResult>> {
-    await TransactionController.mutex.acquire(transaction.receiver);
+  public async withdraw(@Body() transaction: IWithdrawRequest): Promise<IApiResponse<ITransactionResult>> {
+    await TransactionController.mutex.acquire(transaction.account);
     const response = await this.transactionService.withdraw(transaction);
-    TransactionController.mutex.release(transaction.receiver);
+    TransactionController.mutex.release(transaction.account);
     return response;
   }
 
@@ -58,7 +59,7 @@ export class TransactionController extends Controller {
    * @summary Transfer from one account to another account
    */
   @Post('/transfer')
-  public async transfer(@Body() transaction: ITransferTransactionRequest): Promise<IApiResponse<ITransactionResult>> {
+  public async transfer(@Body() transaction: ITransferRequest): Promise<IApiResponse<ITransactionResult>> {
     if (transaction.giver === transaction.receiver) {
       const response = new ApiResponseError(EnumResponseStatus.ValidationFailed);
       response.status.detail = 'giver and receiver should be different';

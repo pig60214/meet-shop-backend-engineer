@@ -38,7 +38,7 @@ describe('TransactionService.Deposit', () => {
   it('Success', async () => {
     mockGet.mockResolvedValue({ name: 'test', balance: 100 });
 
-    const transaction = { receiver: 'test', amount: 100 };
+    const transaction = { account: 'test', amount: 100 };
     const response = await transactionService.deposit(transaction);
 
     expect(mockSet).toHaveBeenCalledTimes(1);
@@ -50,7 +50,7 @@ describe('TransactionService.Deposit', () => {
   it('AccountNotExist', async () => {
     mockGet.mockResolvedValue(undefined);
 
-    const transaction = { receiver: 'test', amount: 100 };
+    const transaction = { account: 'test', amount: 100 };
     const response = await transactionService.deposit(transaction);
 
     expect(mockSet).toHaveBeenCalledTimes(0);
@@ -62,7 +62,7 @@ describe('TransactionService.Withdraw', () => {
   it('Success', async () => {
     mockGet.mockResolvedValue({ name: 'test', balance: 100 });
 
-    const transaction = { receiver: 'test', amount: 100 };
+    const transaction = { account: 'test', amount: 100 };
     const response = await transactionService.withdraw(transaction);
 
     expect(mockSet).toHaveBeenCalledTimes(1);
@@ -74,7 +74,7 @@ describe('TransactionService.Withdraw', () => {
   it('AccountNotExist', async () => {
     mockGet.mockResolvedValue(undefined);
 
-    const transaction = { receiver: 'test', amount: 100 };
+    const transaction = { account: 'test', amount: 100 };
     const response = await transactionService.withdraw(transaction);
 
     expect(mockSet).toHaveBeenCalledTimes(0);
@@ -84,7 +84,7 @@ describe('TransactionService.Withdraw', () => {
   it('BalanceNotEnough', async () => {
     mockGet.mockResolvedValue({ name: 'test', balance: 100 });
 
-    const transaction = { receiver: 'test', amount: 200 };
+    const transaction = { account: 'test', amount: 200 };
     const response = await transactionService.withdraw(transaction);
 
     expect(mockSet).toHaveBeenCalledTimes(0);
@@ -122,7 +122,7 @@ describe('TransactionService.Transfer', () => {
     const response = await transactionService.transfer(transaction);
 
     expect(mockSet).toHaveBeenCalledTimes(0);
-    expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.AccountNotExist]);
+    expect(response.status.message).toBe(EnumResponseStatus[EnumResponseStatus.GiverNotExist]);
   });
 
   it('ReceiverNotExist', async () => {

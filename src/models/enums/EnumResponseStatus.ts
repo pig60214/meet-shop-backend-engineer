@@ -4,7 +4,8 @@
  * 2: AccountExists<br/>
  * 3: AccountNotExist<br/>
  * 4: BalanceNotEnough<br/>
- * 5: ReceiverNotExist<br/>
+ * 5: GiverNotExist<br/>
+ * 6: ReceiverNotExist<br/>
  */
 enum EnumResponseStatus {
   Success,
@@ -12,6 +13,7 @@ enum EnumResponseStatus {
   AccountExists,
   AccountNotExist,
   BalanceNotEnough,
+  GiverNotExist,
   ReceiverNotExist,
 }
 
